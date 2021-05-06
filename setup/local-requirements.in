@@ -1,0 +1,7 @@
+-c testing-requirements.txt
+
+black
+jupyterlab
+ipython
+python-dotenv
+mypy

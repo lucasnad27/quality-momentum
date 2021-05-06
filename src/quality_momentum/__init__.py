@@ -1,0 +1,1 @@
+from quality_momentum.portfolio import Portfolio
