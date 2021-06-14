@@ -1,5 +1,5 @@
-notebooks/.ipynb_checkpoints/
+__pycache__/
 .env
 .python-version
 *.pyc
-__pycache__/
+notebooks/.ipynb_checkpoints/

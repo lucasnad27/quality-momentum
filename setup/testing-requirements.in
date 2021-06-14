@@ -1,7 +1,6 @@
 -c requirements.txt
 
 pytest
-pytest-black
 pytest-flake8
 flake8-docstrings
 pytest-cov

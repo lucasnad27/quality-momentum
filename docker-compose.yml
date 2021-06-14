@@ -1,0 +1,9 @@
+jupyter:
+  restart: always
+  build: .
+  ports:
+    - "127.0.0.1:8888:8888"
+  volumes:
+    - .:/quality-momentum
+  env_file: .env
+  command: "jupyter lab --NotebookApp.token='' --no-browser --ip=0.0.0.0 --allow-root"

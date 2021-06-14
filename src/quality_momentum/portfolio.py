@@ -1,8 +1,9 @@
+"""Module used to manage portfolio performance and actions."""
+
 import math
 from enum import Enum
 
 import arrow
-import pyfolio as pf
 import pandas as pd
 from arrow.arrow import Arrow
 from typing import Generator
@@ -11,15 +12,19 @@ from quality_momentum import calculate_momentum
 
 
 class WeightType(Enum):
+    """Portfolio weighting options."""
+
     equal_weighted = "equal_weighted"
     value_weighted = "value_weighted"
 
 
 def liquidate_positions(positions: pd.DataFrame) -> pd.DataFrame:
+    """Liquidate all open positions."""
     pass
 
 
 def trading_days_through_period(start_date: Arrow, end_date: Arrow) -> Generator[Arrow, None, None]:
+    """Generates all trading days in a given time period and returns an arrow date."""
     current_time = start_date
     while current_time <= end_date:
         yield current_time
@@ -27,7 +32,7 @@ def trading_days_through_period(start_date: Arrow, end_date: Arrow) -> Generator
 
 
 def eligible_for_rebalance(trading_day: Arrow) -> bool:
-    # Rebalance quarterly, before quarter ending months: end of February, May, August, and November
+    """Decides if a given trading day should trigger a rebalance and returns a boolean."""
     is_eligible = False
     eligible_months = [2, 5, 8, 11]
     # consider using trading-calendars lib to identify if we are in the last trading day of the month
@@ -43,7 +48,8 @@ def purchase_new_shares(
     trading_day: Arrow, available_cash: float, num_holdings: int, weight_type: WeightType
 ) -> pd.Series:
     """
-    returns a series representing transactions for the given date (will always be `trading_day`)
+    Returns a series representing transactions for the given date (will always be `trading_day`).
+
     Index: DatetimeIndex
     Columns: Index(['amount', 'price', 'sid', 'symbol', 'txn_dollars'], dtype='object')
     """
@@ -59,7 +65,10 @@ def purchase_new_shares(
 
 
 class Portfolio:
+    """Used for backtesting strategies and taking actions through time."""
+
     def __init__(self, **kwargs):
+        """TODO: Add kwargs."""
         start_date = kwargs["start_date"]
         end_date = kwargs["start_date"]
         capital_allocation = kwargs["capital_allocation"]
@@ -71,7 +80,7 @@ class Portfolio:
         assert isinstance(weighting, WeightType)
         assert isinstance(num_holdings, int)
 
-        self.capital = capital
+        self.capital_allocation = capital_allocation
         self.start_date = kwargs["start_date"]
         self.end_date = kwargs["end_date"]
         self.weighting = weighting
@@ -82,6 +91,7 @@ class Portfolio:
 
     @property
     def transactions(self):
+        """TODO: Describe purpose of transactions."""
         if not self._transactions:
             print("time to make the donuts")
             self.run()
@@ -89,6 +99,7 @@ class Portfolio:
 
     @property
     def returns(self):
+        """TODO: Describe purpose of transactions."""
         if not self._returns:
             print("time to make the donuts")
             self.run()
@@ -96,21 +107,23 @@ class Portfolio:
 
     @property
     def positions(self):
+        """TODO: Describe purpose of positions."""
         if not self._positions:
             print("time to make the donuts")
             self.run()
         return self._positions
 
     def run(self):
-        # iterate through each day of the portfolio time period
-        # add record to positions dataframe and returns series
-        # identify if action should be taken if so...
-        # pull data for equity universe and identify top n stocks
-        # calculate position size for each stock and number of stocks to purchase
-        # liquidate all existing positions (add to transactions dataframe)
-        # enter new positions (add to transactions dataframe)
-        # Rebalance quarterly, before quarter ending months: end of February, May, August, and November.
+        """
+        Iterates through each day of the portfolio time period.
 
+        Add record to positions dataframe and returns series identify if action should be taken if so.
+        pull data for equity universe and identify top n stocks
+        calculate position size for each stock and number of stocks to purchase
+        liquidate all existing positions (add to transactions dataframe)
+        enter new positions (add to transactions dataframe)
+        Rebalance quarterly, before quarter ending months: end of February, May, August, and November.
+        """
         for trading_day in trading_days_through_period(self.start_date, self.end_date):
             # sum positions from previous day, psuedocode...
             # previous_portfolio_value = np.sum(self._positions[trading_day])
@@ -121,6 +134,7 @@ class Portfolio:
                 self._positions[trading_day] = liquidate_positions(self._positions[trading_day])
                 available_cash = self._positions[trading_day]["cash"]
                 purchased_shares = purchase_new_shares(trading_day, available_cash, self.num_holdings, self.weighting)
+                print(purchased_shares)
                 # ***************************** #
 
         self._transactions = "donuts"

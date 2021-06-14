@@ -1,29 +1,36 @@
+"""Functionality to calculate high-quality momentum stocks."""
 import dataclasses
 from typing import List
 
 import arrow
 import pandas as pd
 import pandas_datareader as pdr
-import matplotlib.pyplot as plt
 import numpy as np
 
 
 @dataclasses.dataclass
 class LookbackPeriod:
+    """Sets the time period to look back against."""
+
     start: arrow.arrow.Arrow
     end: arrow.arrow.Arrow
 
 
 @dataclasses.dataclass
 class QualityMomentumMetric:
+    """Quality Momentum metrics."""
+
     momentum: float
     fip: float
     ticker: str
 
 
 def calculate_lookback_window(now: arrow.arrow.Arrow, lookback_months: int) -> LookbackPeriod:
-    # calculate lookback period for momentum
-    # start period defined as the first day of the month, 13 months ago, enabling us to get initial value to compare
+    """
+    Calculate lookback period for momentum.
+
+    start period defined as the first day of the month, 13 months ago, enabling us to get initial value to compare
+    """
     start_period = now.shift(months=-lookback_months).replace(day=1)
     # end period excludes the most recent full month, (exclusive)
     end_period = now.shift(months=-1).replace(day=1)
@@ -31,9 +38,13 @@ def calculate_lookback_window(now: arrow.arrow.Arrow, lookback_months: int) -> L
 
 
 def calculate_fips_number(ticker: pd.DataFrame, cumulative_return: float):
-    # for more information on frog-in-the-pan (FIPs) see this publication:
-    # Frog in the Pan: Continuous Information and Momentum
-    # https://www3.nd.edu/~zda/Frog.pdf
+    """
+    Calculates Frog-In-The-Pan metric.
+
+    For more information on frog-in-the-pan (FIPs) see this publication:
+    Frog in the Pan: Continuous Information and Momentum
+    https://www3.nd.edu/~zda/Frog.pdf
+    """
     num_days = len(ticker)
     percent_positive_return = len(ticker[ticker["daily_returns"] > 0]) / num_days
     percent_negative_return = len(ticker[ticker["daily_returns"] < 0]) / num_days
@@ -42,6 +53,7 @@ def calculate_fips_number(ticker: pd.DataFrame, cumulative_return: float):
 
 
 def get_monthly_momentum(ticker: str, now: arrow.arrow.Arrow = None, num_lookback_months=12) -> QualityMomentumMetric:
+    """Calculates quality momentum metric for a given stock."""
     if not now:
         now = arrow.utcnow()
     lookback_period = calculate_lookback_window(now, lookback_months=12)
@@ -63,7 +75,10 @@ def get_monthly_momentum(ticker: str, now: arrow.arrow.Arrow = None, num_lookbac
 
 def get_quality_momentum_stocks(trading_day: arrow.arrow.Arrow, num_equities: int) -> List[str]:
     """
-    DISCLAIMER: num_equities and weight_type are currently vaporware, need to get a bigger universe of stocks to test this out. For now defaults to top decile of quality momentum, then taking top half based on FIPS
+    Calculates quality momentum and returns a list of top quality momentum stocks.
+
+    DISCLAIMER: num_equities and weight_type are currently vaporware, need to get a bigger universe of stocks to test
+    this out. For now defaults to top decile of quality momentum, then taking top half based on FIPS
     returns a list of top quality momentum stocks for any given trading day
     """
     equities = get_universe_of_equities(trading_day)
@@ -79,6 +94,7 @@ def get_quality_momentum_stocks(trading_day: arrow.arrow.Arrow, num_equities: in
 
 
 def get_universe_of_equities(trading_day: arrow.arrow.Arrow) -> List[str]:
+    """Stub for now until we incorporate w/ available APIs."""
     return [
         "AAPL",
         "INTC",
