@@ -109,7 +109,6 @@ def get_universe_of_equities(trading_day: arrow.arrow.Arrow) -> List[str]:
         "HD",
         "DIS",
         "BA",
-        "MMM",
         "PFE",
         "NKE",
         "JNJ",
