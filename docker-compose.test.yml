@@ -2,4 +2,4 @@ tests:
   build: .
   volumes:
     - .:/quality-momentum
-  command: "python -m pytest ./tests"
+  command: "python -m pytest"
