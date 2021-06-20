@@ -42,8 +42,11 @@ def calculate_fips_number(ticker: pd.DataFrame, cumulative_return: float):
     Calculates Frog-In-The-Pan metric.
 
     For more information on frog-in-the-pan (FIPs) see this publication:
-    Frog in the Pan: Continuous Information and Momentum
-    https://www3.nd.edu/~zda/Frog.pdf
+    Frog in the Pan: Continuous Information and Momentum https://www3.nd.edu/~zda/Frog.pdf
+
+    As this value approaches 1, the more "discrete" the returns are, whereas most days are losers with a few outsized
+    winners indicating high volatily. As this value approaches -1, this indicates that almost every day had a positive
+    return, indicating a smooth path to positive returns, aka the frog slowly boiling in water.
     """
     num_days = len(ticker)
     percent_positive_return = len(ticker[ticker["daily_returns"] > 0]) / num_days
@@ -81,6 +84,8 @@ def get_quality_momentum_stocks(trading_day: arrow.arrow.Arrow, num_equities: in
     this out. For now defaults to top decile of quality momentum, then taking top half based on FIPS
     returns a list of top quality momentum stocks for any given trading day
     """
+    assert trading_day <= arrow.utcnow(), "Unable to get momentum stocks for future dates"
+
     equities = get_universe_of_equities(trading_day)
     momentum_measures = [get_monthly_momentum(e, trading_day) for e in equities]
     df = pd.DataFrame.from_records([dataclasses.asdict(x) for x in momentum_measures], index="ticker")
@@ -95,7 +100,7 @@ def get_quality_momentum_stocks(trading_day: arrow.arrow.Arrow, num_equities: in
 
 def get_universe_of_equities(trading_day: arrow.arrow.Arrow) -> List[str]:
     """Stub for now until we incorporate w/ available APIs."""
-    return [
+    return (
         "AAPL",
         "INTC",
         "TSLA",
@@ -113,5 +118,4 @@ def get_universe_of_equities(trading_day: arrow.arrow.Arrow) -> List[str]:
         "NKE",
         "JNJ",
         "MCD",
-        "INTC",
-    ]
+    )

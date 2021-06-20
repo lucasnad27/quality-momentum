@@ -1,6 +1,5 @@
 """Module used to manage portfolio performance and actions."""
 
-import dataclasses
 import math
 from enum import Enum
 
@@ -59,7 +58,6 @@ def get_adjusted_close(ticker: str, trading_day: Arrow) -> float:
 
 def update_positions(transactions: pd.DataFrame, trading_day) -> pd.DataFrame:
     """Calculates positions based on new transactions and returns a dataframe with the current positions sizes."""
-
     # TODO Include stock splits & dividends into position calculation
     # TODO Include cash as a "symbol"
     df = transactions.groupby(["symbol"])["amount"].sum().to_frame()
@@ -85,7 +83,7 @@ def purchase_new_shares(
     trading_day: Arrow, available_cash: float, num_holdings: int, weight_type: WeightType
 ) -> pd.Series:
     """
-    TODO: Update this docstring
+    TODO: Update this docstring.
 
     Index: DatetimeIndex
     Columns: Index(['amount', 'price', 'symbol', 'txn_dollars'], dtype='object')

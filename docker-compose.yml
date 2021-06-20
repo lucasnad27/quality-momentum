@@ -1,9 +1,15 @@
-jupyter:
-  restart: always
-  build: .
-  ports:
-    - "127.0.0.1:8888:8888"
-  volumes:
-    - .:/quality-momentum
-  env_file: .env
-  command: "jupyter lab --NotebookApp.token='' --no-browser --ip=0.0.0.0 --allow-root"
+version: '3.4'
+services:
+  jupyter:
+    restart: always
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: jupyter
+    container_name: qualitymomentum_jupyter
+    ports:
+      - "127.0.0.1:8888:8888"
+    volumes:
+      - .:/quality-momentum
+    env_file: .env
+    command: "jupyter lab --NotebookApp.token='' --no-browser --ip=0.0.0.0 --allow-root"

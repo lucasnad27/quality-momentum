@@ -1,14 +1,22 @@
-run: stop up
+setup:
+	export DOCKER_BUILDKIT=1
 
-up:
-	docker-compose -f docker-compose.yml up -d --build
+run:
+
+run: setup
+	docker-compose up -d --build jupyter
 
 stop:
-	docker-compose -f docker-compose.yml stop
+	docker-compose stop jupyter
 
-down:
-	docker-compose -f docker-compose.yml down
+build: setup
+	docker build --target=primary . -t qualitymomentum:primary
 
-test:
-	docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit
-	docker-compose -f docker-compose.test.yml down --volumes
+test: build
+	docker run qualitymomentum:primary pytest ./tests
+
+pip_compile:
+	pip-compile ./setup/requirements.in && pip-compile ./setup/testing-requirements.in && pip-compile ./setup/local-requirements.in
+
+pip_sync:
+	pip-sync setup/requirements.txt setup/local-requirements.txt setup/testing-requirements.txt

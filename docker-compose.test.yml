@@ -1,5 +1,0 @@
-tests:
-  build: .
-  volumes:
-    - .:/quality-momentum
-  command: "python -m pytest ./tests"
