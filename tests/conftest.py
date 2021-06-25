@@ -22,8 +22,13 @@ def vcr_cassette_dir(request):
 
 
 @pytest.fixture(scope="session")
-def sampling_date():
+def sample_date():
     return arrow.get("2017-12-03")
+
+
+@pytest.fixture(scope="session")
+def sample_ticker():
+    return "AMC"
 
 
 @pytest.fixture

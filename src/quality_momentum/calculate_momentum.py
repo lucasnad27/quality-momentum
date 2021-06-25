@@ -1,6 +1,6 @@
 """Functionality to calculate high-quality momentum stocks."""
 import dataclasses
-from typing import List
+from typing import List, Tuple
 
 import arrow
 import pandas as pd
@@ -98,7 +98,7 @@ def get_quality_momentum_stocks(trading_day: arrow.arrow.Arrow, num_equities: in
     return equities_to_buy.index.tolist()
 
 
-def get_universe_of_equities(trading_day: arrow.arrow.Arrow) -> List[str]:
+def get_universe_of_equities(trading_day: arrow.arrow.Arrow) -> Tuple[str, ...]:
     """Stub for now until we incorporate w/ available APIs."""
     return (
         "AAPL",

@@ -1,0 +1,86 @@
+interactions:
+- request:
+    body: null
+    headers:
+      Accept:
+      - '*/*'
+      Accept-Encoding:
+      - gzip, deflate
+      Connection:
+      - keep-alive
+      User-Agent:
+      - python-requests/2.25.1
+    method: GET
+    uri: https://www.quandl.com/api/v3/datasets/WIKI/AMC.csv?api_key=DUMMY&end_date=2017-12-04&order=asc&start_date=2017-12-03
+  response:
+    body:
+      string: !!binary |
+        H4sIAAAAAAAA/3NJLEnV8S9IzdPxyEzP0PHJL9dxzskvTtUJy88pzU3Vca3Qdcksy0xJzUvRCS7I
+        ySxRCEosyczXcUzJ0lMA6wOzwJrBLJAJYAbEGDATYhaXkYGhua6hka6BiY6hiZ6hKYg0A5MGYNJY
+        x8jI0MjCBMjXMQBiQxAmoJALAHXVbJzBAAAA
+    headers:
+      Allow:
+      - GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH
+      Cache-Control:
+      - no-store
+      Connection:
+      - keep-alive
+      Content-Disposition:
+      - attachment; filename=WIKI-AMC.csv
+      Content-Encoding:
+      - gzip
+      Content-Security-Policy:
+      - frame-ancestors 'self';
+      Content-Transfer-Encoding:
+      - binary
+      Content-Type:
+      - text/csv
+      Date:
+      - Fri, 25 Jun 2021 20:41:52 GMT
+      ETag:
+      - W/"9f8fa7074f6c81bca477cc98088395c8"
+      Pragma:
+      - no-cache
+      Referrer-Policy:
+      - origin-when-cross-origin
+      Server:
+      - openresty
+      Set-Cookie:
+      - visid_incap_2261005=rGWIJD5DQGKXEBJ7igU+4I8/1mAAAAAAQUIPAAAAAABj0c2bHTDmM7mnM84/IkL0;
+        expires=Sat, 25 Jun 2022 13:53:24 GMT; HttpOnly; path=/; Domain=.quandl.com;
+        Secure; SameSite=None
+      - nlbi_2261005=634TB3xZ5EnZba0FgSMXTwAAAADv1qKL5ZGNR4lDUOVvE7VM; path=/; Domain=.quandl.com;
+        Secure; SameSite=None
+      - incap_ses_1434_2261005=KADaaQtcQHPtQV8/RJjmE48/1mAAAAAAQoYXT23+AV3SJLIKZs0o4Q==;
+        path=/; Domain=.quandl.com; Secure; SameSite=None
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains; preload
+      Transfer-Encoding:
+      - chunked
+      Vary:
+      - Origin
+      X-CDN:
+      - Imperva
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Iinfo:
+      - 12-150210945-150210968 NNYY CT(33 34 0) RT(1624653711434 35) q(0 0 0 -1) r(2
+        2) U2
+      X-Rack-CORS:
+      - miss; no-origin
+      X-RateLimit-Limit:
+      - '50000'
+      X-RateLimit-Remaining:
+      - '49925'
+      X-Request-Id:
+      - cb0942cc-90fd-4d41-abd8-641d9de5fbc4
+      X-Runtime:
+      - '0.099611'
+      X-XSS-Protection:
+      - 1; mode=block
+    status:
+      code: 200
+      message: OK
+version: 1

@@ -49,7 +49,6 @@ def eligible_for_rebalance(trading_day: Arrow) -> bool:
 
 def get_adjusted_close(ticker: str, trading_day: Arrow) -> float:
     """Returns the closing price for a symbol on a given day."""
-    print(ticker)
     df = pdr.quandl.QuandlReader(
         ticker, trading_day.format("YYYY-MM-DD"), trading_day.shift(days=+1).format("YYYY-MM-DD")
     ).read()
