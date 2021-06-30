@@ -6,11 +6,12 @@ from enum import Enum
 import arrow
 import numpy as np
 import pandas as pd
-import pandas_datareader as pdr
+import trading_calendars as tc
+from alive_progress import alive_bar
 from arrow.arrow import Arrow
 from typing import Generator
 
-from quality_momentum import calculate_momentum
+import quality_momentum as qm
 
 
 class WeightType(Enum):
@@ -30,7 +31,8 @@ def trading_days_through_period(start_date: Arrow, end_date: Arrow) -> Generator
     """Generates all trading days in a given time period and returns an arrow date."""
     current_time = start_date
     while current_time <= end_date:
-        yield current_time
+        if qm.equities.historical.is_valid_trading_day(current_time):
+            yield current_time
         current_time = current_time.shift(days=+1)
 
 
@@ -47,25 +49,21 @@ def eligible_for_rebalance(trading_day: Arrow) -> bool:
     return is_eligible
 
 
-def get_adjusted_close(ticker: str, trading_day: Arrow) -> float:
+def get_adjusted_close(client: qm.equities.client.TdClient, ticker: str, trading_day: Arrow) -> float:
     """Returns the closing price for a symbol on a given day."""
-    df = pdr.quandl.QuandlReader(
-        ticker, trading_day.format("YYYY-MM-DD"), trading_day.shift(days=+1).format("YYYY-MM-DD")
-    ).read()
-    return df["AdjClose"].array[0]
+    return qm.equities.historical.get_price(client, ticker, trading_day)
 
 
-def update_positions(transactions: pd.DataFrame, trading_day) -> pd.DataFrame:
+def update_positions(client: qm.equities.client.TdClient, transactions: pd.DataFrame, trading_day) -> pd.DataFrame:
     """Calculates positions based on new transactions and returns a dataframe with the current positions sizes."""
-    # TODO Include stock splits & dividends into position calculation
-    # TODO Include cash as a "symbol"
     df = transactions.groupby(["symbol"])["amount"].sum().to_frame()
-    df["date"] = trading_day
+    df["date"] = trading_day.datetime
 
     # move the ticker from index to the symbol column
     df = df.reset_index().set_index("date").query("amount>0")
-    df["price"] = df.apply(lambda x: get_adjusted_close(x["symbol"], trading_day), axis=1)
+    df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
     df["value"] = df["price"] * df["amount"]
+
     return df.pivot_table(index="date", columns="symbol", values="value")
 
 
@@ -79,15 +77,19 @@ def calculate_returns(positions: pd.DataFrame) -> pd.Series:
 
 
 def purchase_new_shares(
-    trading_day: Arrow, available_cash: float, num_holdings: int, weight_type: WeightType
-) -> pd.Series:
+    client: qm.equities.client.TdClient,
+    trading_day: Arrow,
+    available_cash: float,
+    num_holdings: int,
+    weight_type: WeightType,
+) -> pd.DataFrame:
     """
-    TODO: Update this docstring.
+    Purchases shares of quality momentum stocks.
 
     Index: DatetimeIndex
     Columns: Index(['amount', 'price', 'symbol', 'txn_dollars'], dtype='object')
     """
-    tickers = calculate_momentum.get_quality_momentum_stocks(trading_day, num_holdings)
+    tickers = qm.algorithms.calculate_momentum.get_quality_momentum_stocks(client, trading_day, num_holdings)
     if weight_type == WeightType.value_weighted:
         # Consider Sharadar data from quandl to pull in market cap data
         # https://www.quandl.com/databases/SF1/data
@@ -95,10 +97,10 @@ def purchase_new_shares(
 
     data = [(x, math.floor(available_cash / len(tickers))) for x in tickers]
     df = pd.DataFrame(data, columns=["symbol", "position_size"])
-    df["price"] = df.apply(lambda x: get_adjusted_close(x["symbol"], trading_day), axis=1)
+    df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
     df["amount"] = (df["position_size"] / df["price"]).apply(np.floor)
     df["txn_dollars"] = df["price"] * df["amount"]
-    df["date"] = trading_day
+    df["date"] = pd.to_datetime(trading_day.date())
     df.set_index("date", inplace=True)
     del df["position_size"]
     return df
@@ -108,7 +110,16 @@ class Portfolio:
     """Used for backtesting strategies and taking actions through time."""
 
     def __init__(self, **kwargs):
-        """TODO: Add kwargs."""
+        """
+        Creates a new immutable portfolio.
+
+        Options include
+        start_date --> arrow.Arrow
+        end_date --> arrow.Arrow
+        capital_allocation --> float
+        weighting --> WeightType
+        num_holdings --> integer
+        """
         start_date = kwargs["start_date"]
         end_date = kwargs["end_date"]
         capital_allocation = kwargs["capital_allocation"]
@@ -126,9 +137,10 @@ class Portfolio:
         self.weighting = weighting
         self.num_holdings = num_holdings
         self._transactions = pd.DataFrame()
-        self._returns = pd.DataFrame()
+        self._returns = pd.Series()
         self._positions = pd.DataFrame()
         self._shares = None
+        self.td_client = qm.equities.client.TdClient()
 
     @property
     def transactions(self):
@@ -139,14 +151,14 @@ class Portfolio:
 
     @property
     def returns(self):
-        """TODO: Describe purpose of transactions."""
+        """Returns a dataframe providing the returns over the lifetime of the portfolio."""
         if self._returns.empty:
             self.run()
         return self._returns
 
     @property
     def positions(self):
-        """TODO: Describe purpose of positions."""
+        """Returns a dataframe representing all positions through the lifetime of the portfolio."""
         if self._positions.empty:
             self.run()
         return self._positions
@@ -163,21 +175,31 @@ class Portfolio:
         Rebalance quarterly, before quarter ending months: end of February, May, August, and November.
         """
         day_0 = self.start_date
-        day_1 = self.start_date.shift(days=+1)
+        # ensure that day_0 is a valid trading days, bump day forward until this is true
+        while True:
+            if qm.equities.historical.is_valid_trading_day(day_0):
+                # day_0 is a valid trading day
+                break
+            day_0 = day_0.shift(days=+1)
+        day_1 = day_0.shift(days=+1)
+
         # purchase shares, regardless of eligibility for rebalance
-        self._transactions = purchase_new_shares(day_0, self.capital_allocation, self.num_holdings, self.weighting)
+        self._transactions = purchase_new_shares(
+            self.td_client, day_0, self.capital_allocation, self.num_holdings, self.weighting
+        )
         # initialize positions based on first day's transactions
-        updated_positions = update_positions(self._transactions, day_0)
+        updated_positions = update_positions(self.td_client, self._transactions, day_0)
         # assign rows to the `day_0` self._positions index
         self._positions = self._positions.append(updated_positions)
-        for trading_day in trading_days_through_period(day_1, self.end_date):
-            updated_positions = update_positions(self._transactions, trading_day)
-            self._positions = self._positions.append(updated_positions)
-            if eligible_for_rebalance(trading_day):
-                # TODO: Implement liquidation and share purchasing
-                pass
-            # kill the backtest until remainder of data layer functionality and rebalancing is complete
-            break
+        nyse = tc.get_calendar("NYSE")
+        with alive_bar(len(nyse.sessions_in_range(self.start_date.datetime, self.end_date.datetime))) as bar:
+            for trading_day in trading_days_through_period(day_1, self.end_date):
+                updated_positions = update_positions(self.td_client, self._transactions, trading_day)
+                self._positions = self._positions.append(updated_positions)
+                if eligible_for_rebalance(trading_day):
+                    # kill the backtest until remainder of data layer functionality and rebalancing is complete
+                    pass
+                bar()
 
         # calculate returns based on positions df, after iterating through trading days
         self._returns = calculate_returns(self._positions)

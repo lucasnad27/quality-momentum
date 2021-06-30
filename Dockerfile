@@ -11,7 +11,7 @@ RUN pip install pip-tools
 
 COPY ./setup/*.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
-    pip-sync requirements.txt local-requirements.txt testing-requirements.txt --pip-args '--no-cache-dir --no-deps'
+    pip-sync requirements.txt --pip-args '--no-cache-dir --no-deps'
 
 COPY . /quality-momentum
 

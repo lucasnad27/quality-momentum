@@ -1,284 +1,114 @@
 interactions:
 - request:
-    body: null
+    body: grant_type=refresh_token&refresh_token=DUMMY
     headers:
-      Accept:
-      - '*/*'
-      Accept-Encoding:
+      accept:
+      - application/json
+      accept-encoding:
       - gzip, deflate
-      Connection:
+      connection:
       - keep-alive
-      User-Agent:
-      - python-requests/2.25.1
-    method: GET
-    uri: https://www.quandl.com/api/v3/datasets/WIKI/BA.csv?api_key=DUMMY&end_date=2017-11-01&order=asc&start_date=2016-12-01
+      content-length:
+      - '1018'
+      content-type:
+      - application/x-www-form-urlencoded;charset=UTF-8
+      host:
+      - api.tdameritrade.com
+      user-agent:
+      - python-httpx/0.18.1
+    method: POST
+    uri: https://api.tdameritrade.com/v1/oauth2/token
   response:
-    body:
-      string: !!binary |
-        H4sIAAAAAAAA/4Sb2450uW2F7/MUfoCegs6iLoM4QC4CBEiA3BvwIBnD8RiIc3j8fItUbdXe/cOB
-        PV3/7qqmKB4WFynVb3/3l5+//unPP//p6x9++bd///rHX//n6+/++Ot//vz1r7/+8b/+4+evv//f
-        n377y3//8vuf//T7r3/58x9/+ctv/vl3f/nl16+//f0fXr/xv/N/+R/7vyTB/xFi/J8h629KyuOn
-        XH5K+Sv39JqNl/Iay5/q8ideirW6anqlL/2X9V8br5FWHnO2Ufhgs1dPfdbUe2rL3y/DZl+pTmv+
-        fsl19Tz67PVIPCoUX631eNHa+ZXjl6V/lYzkmW8qIHKWmmarQx/kueZc+L9ZL67CmqjQamup+vtp
-        zmmWZ8sfEo8KWru+SvOX2V0FC4XyQOfeF0I/VViv1NLorJeWP/Y6hpVRbUmD+Rpms63RU8n+vFYq
-        vfU0yjwCjwbDLW/bD82ftmVQq7Y5+OuHH2Yarcw6JyK1ycauUpq1LanUXyuZLcMEYaM0jNUxE4td
-        Ao8G03c99NKwpz+l6QHSXrl9ldXlwZsO89VzZds1t7Z1tlwrri56liNqYkm3vZtp5b4IhrXmOBKP
-        EuaryRioP99L60nRuIrVeYtGReuoGB07lwidsbq10dqY9m1FD61KGKRukx1fEo8Gy1cbcv54mcdC
-        f7XijwRn4c9slpsO+VVZkQ+UOaq7rM+R+E2aeYezUsaweZ3h0oRSo5f5IfBSIcdikmz+E3fwcyoU
-        W0HIXI/lZ2H7Dbu7/SpOJOqGrDvDKTOjDDrUiC/rtfDh3vsReJbXYuuF34f+0tc3c5XG+OpEdJ23
-        SOR9DJpmsTXCc8OIQdk5d19/VCJztLFS5BSpsupcCS8cgUeB5ouV6i91R0FERptfdbRU0nyYYDWM
-        SJTPvcVkzawtjFsiCnozUrBjF1eJ/SsojEWPxKNCAMKqvp2NC56jwIPy11Yt7QEIMxNYhFkLoy8D
-        HXJu+jOyzwY5nzO/qoEXfeTa2D3uvuQdBWKtbffkD26X9upfHZhjocfyY9TscVW+xwTrL/69jIX8
-        fQwwwM5lEzcdgWf9SANXYyoWePBYGPJETUm480hE4CYBubVbdhdMfGJ8cKwoMti6p6VoCw3xvxcS
-        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
-        //M/AAAA//8DAMsIexhkdgAA
+    content: "{\n  \"access_token\" : \"DUMMY-ACCESSKEY\",\n
+      \ \"scope\" : \"PlaceTrades AccountAccess MoveMoney\",\n  \"expires_in\" : 1800,\n
+      \ \"token_type\" : \"Bearer\"\n}"
     headers:
-      Allow:
-      - GET, HEAD, POST, PUT, DELETE, OPTIONS, PATCH
+      Access-Control-Allow-Headers:
+      - origin, x-requested-with, accept, authorization, content-type, correlationid,
+        apikey, application-name
+      Access-Control-Allow-Methods:
+      - GET, PUT, POST, DELETE, OPTIONS, HEAD, PATCH
+      Access-Control-Allow-Origin:
+      - ''
+      Access-Control-Max-Age:
+      - '3628800'
       Cache-Control:
-      - no-store
+      - no-cache,no-store
+      - no-cache,no-store,must-revalidate
       Connection:
       - keep-alive
-      Content-Disposition:
-      - attachment; filename=WIKI-BA.csv
-      Content-Encoding:
-      - gzip
+      Content-Length:
+      - '1381'
       Content-Security-Policy:
-      - frame-ancestors 'self';
-      Content-Transfer-Encoding:
-      - binary
+      - frame-ancestors 'self'
       Content-Type:
-      - text/csv
+      - application/json;charset=UTF-8
       Date:
-      - Thu, 24 Jun 2021 22:43:27 GMT
-      ETag:
-      - W/"bab7f1d326991cd1215e53b0c43cb214"
-      Pragma:
-      - no-cache
-      Referrer-Policy:
-      - origin-when-cross-origin
-      Server:
-      - openresty
-      Set-Cookie:
-      - visid_incap_2261005=ibVrlvEbRvCxtGQdAUQhBFAK1WAAAAAAQUIPAAAAAACMujgV8LLO3TzvkMtMLfiQ;
-        expires=Fri, 24 Jun 2022 13:53:24 GMT; HttpOnly; path=/; Domain=.quandl.com;
-        Secure; SameSite=None
-      - nlbi_2261005=N54tVNcRZiUanafZgSMXTwAAAAB2RmS3J1kTkhUpqrYj4nju; path=/; Domain=.quandl.com;
-        Secure; SameSite=None
-      - incap_ses_1434_2261005=afWZUDofHxBI4hg+RJjmE44K1WAAAAAApI2eEmaH7gyb44O3wLPF+Q==;
-        path=/; Domain=.quandl.com; Secure; SameSite=None
+      - Fri, 02 Jul 2021 18:02:04 GMT
       Strict-Transport-Security:
-      - max-age=31536000; includeSubDomains; preload
-      Transfer-Encoding:
-      - chunked
-      Vary:
-      - Origin
-      X-CDN:
-      - Imperva
+      - max-age=31536000; includeSubDomains
+      - max-age=31536000
+      X-Application-Context:
+      - OAUTH_SERVICE:run:8080
       X-Content-Type-Options:
       - nosniff
       X-Frame-Options:
       - SAMEORIGIN
-      X-Iinfo:
-      - 14-159719726-159719735 NNYN CT(32 75 0) RT(1624574606470 50) q(0 0 1 1) r(3
-        3) U2
-      X-Rack-CORS:
-      - miss; no-origin
-      X-RateLimit-Limit:
-      - '50000'
-      X-RateLimit-Remaining:
-      - '49995'
-      X-Request-Id:
-      - becd2e93-c9db-415c-b65c-abaacb5de284
-      X-Runtime:
-      - '0.142927'
-      X-XSS-Protection:
+      X-Xss-Protection:
       - 1; mode=block
-    status:
-      code: 200
-      message: OK
+    http_version: HTTP/1.1
+    status_code: 200
+- request:
+    body: ''
+    headers:
+      accept:
+      - '*/*'
+      accept-encoding:
+      - gzip, deflate
+      connection:
+      - keep-alive
+      host:
+      - api.tdameritrade.com
+      user-agent:
+      - python-httpx/0.18.1
+    method: GET
+    uri: https://api.tdameritrade.com/v1/marketdata/BA/pricehistory?apikey=DUMMY&endDate=1509494400000&frequency=1&frequencyType=daily&period=20&periodType=year&startDate=1480550400000
+  response:
+    content: '{"candles":[{"open":151.59,"high":153.08,"low":150.56,"close":150.56,"volume":3990972,"datetime":1480485600000},{"open":150.74,"high":152.69,"low":150.39,"close":152.39,"volume":2843930,"datetime":1480572000000},{"open":152.45,"high":152.49,"low":151.12,"close":152.25,"volume":2105577,"datetime":1480658400000},{"open":153.24,"high":153.75,"low":151.85,"close":152.16,"volume":2855946,"datetime":1480917600000},{"open":150.84,"high":152.64,"low":150.02,"close":152.24,"volume":3476254,"datetime":1481004000000},{"open":151.67,"high":154.31,"low":151.0701,"close":154.14,"volume":2955753,"datetime":1481090400000},{"open":154.6,"high":155.97,"low":154.14,"close":155.39,"volume":2928370,"datetime":1481176800000},{"open":155.65,"high":156.875,"low":155.42,"close":156.49,"volume":2707872,"datetime":1481263200000},{"open":156.0,"high":158.0,"low":154.3,"close":157.16,"volume":4250580,"datetime":1481522400000},{"open":159.1,"high":160.07,"low":154.88,"close":156.66,"volume":5650374,"datetime":1481608800000},{"open":156.23,"high":156.37,"low":154.18,"close":154.47,"volume":3640207,"datetime":1481695200000},{"open":153.93,"high":155.24,"low":153.06,"close":153.77,"volume":2889324,"datetime":1481781600000},{"open":153.88,"high":156.0,"low":153.14,"close":154.5,"volume":5885499,"datetime":1481868000000},{"open":155.16,"high":157.1,"low":155.07,"close":156.18,"volume":3002782,"datetime":1482127200000},{"open":156.96,"high":157.89,"low":155.95,"close":156.39,"volume":2270137,"datetime":1482213600000},{"open":156.6883,"high":158.5,"low":156.65,"close":157.48,"volume":2326366,"datetime":1482300000000},{"open":158.5,"high":158.99,"low":156.25,"close":157.46,"volume":3958475,"datetime":1482386400000},{"open":158.27,"high":158.27,"low":156.51,"close":157.81,"volume":2135828,"datetime":1482472800000},{"open":158.41,"high":158.48,"low":156.91,"close":157.48,"volume":1858667,"datetime":1482818400000},{"open":157.12,"high":157.35,"low":156.01,"close":156.1,"volume":1810430,"datetime":1482904800000},{"open":156.0,"high":156.75,"low":155.16,"close":155.69,"volume":1803955,"datetime":1482991200000},{"open":156.49,"high":156.79,"low":154.96,"close":155.68,"volume":2028432,"datetime":1483077600000},{"open":156.3,"high":157.14,"low":155.21,"close":156.97,"volume":3426113,"datetime":1483423200000},{"open":157.81,"high":159.2299,"low":157.81,"close":158.62,"volume":3189810,"datetime":1483509600000},{"open":158.41,"high":159.7,"low":157.401,"close":158.71,"volume":2795984,"datetime":1483596000000},{"open":158.98,"high":159.66,"low":157.89,"close":159.1,"volume":2426662,"datetime":1483682400000},{"open":159.0,"high":159.24,"low":158.17,"close":158.32,"volume":2839400,"datetime":1483941600000},{"open":158.96,"high":159.94,"low":158.57,"close":159.07,"volume":2988302,"datetime":1484028000000},{"open":159.54,"high":159.7,"low":158.28,"close":159.4,"volume":2416487,"datetime":1484114400000},{"open":159.15,"high":159.16,"low":156.67,"close":158.29,"volume":3020486,"datetime":1484200800000},{"open":158.74,"high":159.58,"low":158.34,"close":158.83,"volume":2435391,"datetime":1484287200000},{"open":158.2,"high":159.04,"low":157.23,"close":157.67,"volume":2758788,"datetime":1484632800000},{"open":157.55,"high":159.05,"low":156.75,"close":158.32,"volume":2087283,"datetime":1484719200000},{"open":158.87,"high":159.87,"low":157.91,"close":159.0,"volume":3143963,"datetime":1484805600000},{"open":159.81,"high":160.3,"low":158.23,"close":159.53,"volume":3384525,"datetime":1484892000000},{"open":158.94,"high":159.5,"low":157.29,"close":157.84,"volume":3931185,"datetime":1485151200000},{"open":158.58,"high":160.93,"low":157.84,"close":160.55,"volume":3927536,"datetime":1485237600000},{"open":163.59,"high":168.65,"low":163.24,"close":167.36,"volume":7480039,"datetime":1485324000000},{"open":167.25,"high":170.0,"low":167.25,"close":169.12,"volume":5436834,"datetime":1485410400000},{"open":169.21,"high":169.8,"low":167.01,"close":167.7,"volume":4883230,"datetime":1485496800000},{"open":165.92,"high":165.99,"low":163.82,"close":165.57,"volume":5456316,"datetime":1485756000000},{"open":164.96,"high":165.1,"low":163.22,"close":163.42,"volume":5350680,"datetime":1485842400000},{"open":164.25,"high":165.81,"low":163.12,"close":163.97,"volume":3138026,"datetime":1485928800000},{"open":163.22,"high":163.97,"low":160.82,"close":162.26,"volume":3791669,"datetime":1486015200000},{"open":162.99,"high":163.56,"low":162.31,"close":162.4,"volume":2981662,"datetime":1486101600000},{"open":162.42,"high":164.08,"low":162.38,"close":163.98,"volume":3110494,"datetime":1486360800000},{"open":165.0,"high":167.4199,"low":164.8725,"close":166.5,"volume":4243239,"datetime":1486447200000},{"open":165.0,"high":165.24,"low":163.69,"close":163.81,"volume":3041595,"datetime":1486533600000},{"open":164.67,"high":165.086,"low":164.06,"close":164.28,"volume":3451132,"datetime":1486620000000},{"open":165.25,"high":166.45,"low":164.47,"close":166.23,"volume":2689719,"datetime":1486706400000},{"open":166.45,"high":169.07,"low":166.35,"close":168.03,"volume":3765027,"datetime":1486965600000},{"open":167.7,"high":168.8,"low":167.22,"close":168.5,"volume":2580278,"datetime":1487052000000},{"open":168.42,"high":169.95,"low":168.35,"close":169.3,"volume":4033198,"datetime":1487138400000},{"open":169.64,"high":170.81,"low":168.75,"close":170.81,"volume":3070147,"datetime":1487224800000},{"open":170.41,"high":173.25,"low":170.4,"close":172.71,"volume":4982894,"datetime":1487311200000},{"open":173.92,"high":176.17,"low":173.68,"close":175.56,"volume":4231706,"datetime":1487656800000},{"open":174.98,"high":175.75,"low":174.01,"close":175.36,"volume":2832136,"datetime":1487743200000},{"open":175.97,"high":177.0,"low":175.7,"close":176.86,"volume":3502645,"datetime":1487829600000},{"open":176.75,"high":178.8,"low":176.1,"close":177.44,"volume":4197152,"datetime":1487916000000},{"open":178.0,"high":179.8839,"low":177.55,"close":179.43,"volume":2892626,"datetime":1488175200000},{"open":180.34,"high":181.93,"low":179.67,"close":180.23,"volume":4785145,"datetime":1488261600000},{"open":181.85,"high":184.8,"low":181.82,"close":183.91,"volume":5461751,"datetime":1488348000000},{"open":184.0,"high":185.71,"low":182.97,"close":182.99,"volume":4909023,"datetime":1488434400000},{"open":183.04,"high":183.58,"low":181.45,"close":182.18,"volume":3940363,"datetime":1488520800000},{"open":181.4,"high":182.3,"low":180.43,"close":180.93,"volume":4244029,"datetime":1488780000000},{"open":180.64,"high":182.84,"low":180.6209,"close":182.02,"volume":2451990,"datetime":1488866400000},{"open":182.4,"high":182.694,"low":181.49,"close":181.74,"volume":2321738,"datetime":1488952800000},{"open":181.43,"high":182.59,"low":179.58,"close":180.57,"volume":3100466,"datetime":1489039200000},{"open":181.9,"high":181.97,"low":177.92,"close":178.7,"volume":4595621,"datetime":1489125600000},{"open":177.16,"high":179.19,"low":177.07,"close":179.05,"volume":3499021,"datetime":1489381200000},{"open":178.54,"high":179.69,"low":177.71,"close":178.73,"volume":2346666,"datetime":1489467600000},{"open":179.0,"high":179.24,"low":177.97,"close":178.71,"volume":3569047,"datetime":1489554000000},{"open":179.8199,"high":180.0,"low":177.64,"close":178.19,"volume":3100744,"datetime":1489640400000},{"open":178.31,"high":180.3835,"low":178.17,"close":180.1,"volume":5037385,"datetime":1489726800000},{"open":180.1,"high":180.15,"low":179.14,"close":179.39,"volume":2062211,"datetime":1489986000000},{"open":179.99,"high":180.25,"low":175.5,"close":175.96,"volume":3239579,"datetime":1490072400000},{"open":175.96,"high":177.1,"low":175.5,"close":176.98,"volume":2505738,"datetime":1490158800000},{"open":177.34,"high":177.85,"low":176.59,"close":177.26,"volume":2006383,"datetime":1490245200000},{"open":176.85,"high":177.53,"low":174.7687,"close":175.82,"volume":2386809,"datetime":1490331600000},{"open":174.37,"high":176.44,"low":173.75,"close":176.1,"volume":2750685,"datetime":1490590800000},{"open":176.29,"high":177.683,"low":175.0,"close":177.36,"volume":2412559,"datetime":1490677200000},{"open":177.4,"high":177.99,"low":176.97,"close":177.63,"volume":1640601,"datetime":1490763600000},{"open":177.25,"high":178.49,"low":177.22,"close":177.98,"volume":1737221,"datetime":1490850000000},{"open":178.02,"high":178.18,"low":176.81,"close":176.86,"volume":2032749,"datetime":1490936400000},{"open":177.08,"high":177.73,"low":175.5,"close":176.65,"volume":2934818,"datetime":1491195600000},{"open":176.88,"high":178.79,"low":176.76,"close":178.7,"volume":2326494,"datetime":1491282000000},{"open":179.0,"high":180.18,"low":176.89,"close":177.08,"volume":2567212,"datetime":1491368400000},{"open":177.56,"high":178.22,"low":177.12,"close":177.37,"volume":2343873,"datetime":1491454800000},{"open":178.39,"high":179.09,"low":177.26,"close":178.85,"volume":2806866,"datetime":1491541200000},{"open":179.0,"high":179.97,"low":177.48,"close":177.56,"volume":2309273,"datetime":1491800400000},{"open":177.5,"high":178.6,"low":176.96,"close":178.57,"volume":2266280,"datetime":1491886800000},{"open":178.25,"high":178.25,"low":175.94,"close":176.05,"volume":2922725,"datetime":1491973200000},{"open":175.74,"high":176.88,"low":175.5639,"close":175.62,"volume":2024086,"datetime":1492059600000},{"open":175.84,"high":179.08,"low":175.65,"close":179.02,"volume":2450222,"datetime":1492405200000},{"open":178.59,"high":179.97,"low":177.12,"close":177.85,"volume":2960165,"datetime":1492491600000},{"open":178.47,"high":179.9,"low":178.16,"close":178.4,"volume":2124533,"datetime":1492578000000},{"open":178.74,"high":179.82,"low":178.346,"close":179.3,"volume":2335176,"datetime":1492664400000},{"open":179.42,"high":180.93,"low":179.42,"close":180.38,"volume":3146556,"datetime":1492750800000},{"open":181.75,"high":182.46,"low":181.61,"close":182.06,"volume":3141913,"datetime":1493010000000},{"open":182.53,"high":183.85,"low":182.53,"close":183.51,"volume":3735370,"datetime":1493096400000},{"open":182.31,"high":183.0,"low":180.11,"close":181.71,"volume":4471593,"datetime":1493182800000},{"open":182.59,"high":183.76,"low":182.59,"close":183.22,"volume":3129075,"datetime":1493269200000},{"open":183.42,"high":184.93,"low":183.02,"close":184.83,"volume":2181592,"datetime":1493355600000},{"open":184.23,"high":184.485,"low":181.8,"close":182.39,"volume":3516749,"datetime":1493614800000},{"open":182.54,"high":183.91,"low":182.53,"close":183.44,"volume":1979787,"datetime":1493701200000},{"open":183.45,"high":183.75,"low":182.25,"close":183.39,"volume":2983245,"datetime":1493787600000},{"open":183.33,"high":184.25,"low":182.18,"close":183.07,"volume":2289326,"datetime":1493874000000},{"open":183.16,"high":185.07,"low":183.16,"close":185.01,"volume":2636917,"datetime":1493960400000},{"open":185.38,"high":186.39,"low":185.0,"close":186.02,"volume":1963569,"datetime":1494219600000},{"open":186.11,"high":187.205,"low":186.05,"close":186.91,"volume":3003956,"datetime":1494306000000},{"open":185.14,"high":185.65,"low":178.18,"close":183.18,"volume":7060056,"datetime":1494392400000},{"open":182.9,"high":184.33,"low":182.17,"close":183.94,"volume":2883815,"datetime":1494478800000},{"open":183.71,"high":183.98,"low":182.63,"close":183.25,"volume":3479223,"datetime":1494565200000},{"open":183.3,"high":184.11,"low":182.28,"close":182.39,"volume":3364967,"datetime":1494824400000},{"open":182.73,"high":183.15,"low":182.04,"close":182.7,"volume":2156147,"datetime":1494910800000},{"open":181.39,"high":181.52,"low":178.68,"close":178.78,"volume":2535741,"datetime":1494997200000},{"open":178.48,"high":178.5,"low":175.471,"close":177.4,"volume":3118075,"datetime":1495083600000},{"open":177.73,"high":181.42,"low":176.77,"close":180.76,"volume":4038909,"datetime":1495170000000},{"open":183.78,"high":185.32,"low":182.52,"close":183.67,"volume":2946750,"datetime":1495429200000},{"open":184.0,"high":184.46,"low":182.86,"close":183.49,"volume":2123758,"datetime":1495515600000},{"open":183.46,"high":185.4,"low":183.46,"close":185.25,"volume":2425330,"datetime":1495602000000},{"open":185.63,"high":187.42,"low":185.59,"close":187.07,"volume":2363329,"datetime":1495688400000},{"open":186.73,"high":187.605,"low":186.27,"close":186.59,"volume":1735778,"datetime":1495774800000},{"open":186.76,"high":187.42,"low":186.19,"close":186.88,"volume":2231571,"datetime":1496120400000},{"open":187.37,"high":188.26,"low":186.72,"close":187.63,"volume":5186677,"datetime":1496206800000},{"open":187.41,"high":187.91,"low":184.53,"close":187.32,"volume":2870243,"datetime":1496293200000},{"open":187.82,"high":191.7,"low":187.6499,"close":190.23,"volume":3034272,"datetime":1496379600000},{"open":190.07,"high":190.74,"low":188.81,"close":188.95,"volume":2522113,"datetime":1496638800000},{"open":188.41,"high":188.86,"low":186.685,"close":186.75,"volume":2724995,"datetime":1496725200000},{"open":186.85,"high":188.54,"low":186.3926,"close":188.1,"volume":2383954,"datetime":1496811600000},{"open":188.1,"high":191.07,"low":187.7,"close":189.93,"volume":2340325,"datetime":1496898000000},{"open":190.0,"high":190.99,"low":189.25,"close":190.03,"volume":3344896,"datetime":1496984400000},{"open":190.3,"high":190.53,"low":188.05,"close":190.0,"volume":2730111,"datetime":1497243600000},{"open":190.05,"high":191.56,"low":189.35,"close":191.09,"volume":1882684,"datetime":1497330000000},{"open":191.05,"high":193.38,"low":190.819,"close":192.38,"volume":2210039,"datetime":1497416400000},{"open":191.43,"high":195.55,"low":191.37,"close":195.45,"volume":2894081,"datetime":1497502800000},{"open":196.01,"high":197.95,"low":195.81,"close":196.44,"volume":6939081,"datetime":1497589200000},{"open":197.88,"high":199.47,"low":197.0,"close":199.08,"volume":2726416,"datetime":1497848400000},{"open":198.75,"high":201.24,"low":198.31,"close":198.33,"volume":3077408,"datetime":1497934800000},{"open":199.58,"high":199.71,"low":197.56,"close":199.17,"volume":3151125,"datetime":1498021200000},{"open":199.25,"high":200.409,"low":199.18,"close":199.44,"volume":3339255,"datetime":1498107600000},{"open":199.26,"high":202.35,"low":198.68,"close":202.23,"volume":4310050,"datetime":1498194000000},{"open":202.77,"high":204.39,"low":199.94,"close":199.98,"volume":3077632,"datetime":1498453200000},{"open":199.8,"high":200.92,"low":198.89,"close":198.89,"volume":2296887,"datetime":1498539600000},{"open":199.5,"high":200.95,"low":199.3,"close":199.62,"volume":2096774,"datetime":1498626000000},{"open":199.62,"high":199.755,"low":196.45,"close":197.46,"volume":2428873,"datetime":1498712400000},{"open":198.5,"high":199.44,"low":197.3901,"close":197.75,"volume":2225564,"datetime":1498798800000},{"open":198.07,"high":199.44,"low":197.75,"close":198.59,"volume":1511163,"datetime":1499058000000},{"open":199.3,"high":202.14,"low":198.86,"close":201.81,"volume":2716674,"datetime":1499230800000},{"open":201.64,"high":202.49,"low":200.78,"close":201.48,"volume":2737400,"datetime":1499317200000},{"open":202.24,"high":203.28,"low":201.26,"close":202.37,"volume":3090441,"datetime":1499403600000},{"open":202.32,"high":204.58,"low":202.19,"close":203.96,"volume":2701928,"datetime":1499662800000},{"open":204.0,"high":206.66,"low":204.0,"close":206.27,"volume":2815790,"datetime":1499749200000},{"open":206.95,"high":208.61,"low":206.32,"close":206.44,"volume":2817350,"datetime":1499835600000},{"open":206.8,"high":207.0,"low":205.35,"close":206.23,"volume":1943575,"datetime":1499922000000},{"open":206.7979,"high":208.73,"low":206.74,"close":208.51,"volume":3229034,"datetime":1500008400000},{"open":208.73,"high":209.72,"low":208.56,"close":209.0,"volume":2415956,"datetime":1500267600000},{"open":209.11,"high":209.19,"low":207.53,"close":208.24,"volume":1943144,"datetime":1500354000000},{"open":209.43,"high":210.93,"low":208.99,"close":210.88,"volume":2258363,"datetime":1500440400000},{"open":211.1,"high":211.25,"low":209.9189,"close":210.28,"volume":2235082,"datetime":1500526800000},{"open":209.99,"high":212.2014,"low":209.41,"close":212.14,"volume":2098402,"datetime":1500613200000},{"open":212.0,"high":212.64,"low":211.4,"close":212.18,"volume":2392741,"datetime":1500872400000},{"open":213.22,"high":214.0,"low":211.95,"close":212.46,"volume":2889035,"datetime":1500958800000},{"open":223.48,"high":233.98,"low":223.02,"close":233.45,"volume":14139955,"datetime":1501045200000},{"open":237.13,"high":242.68,"low":236.7,"close":241.0,"volume":10860578,"datetime":1501131600000},{"open":240.82,"high":242.0,"low":238.55,"close":241.27,"volume":4602406,"datetime":1501218000000},{"open":241.85,"high":246.49,"low":241.82,"close":242.46,"volume":5777271,"datetime":1501477200000},{"open":243.38,"high":243.991,"low":239.155,"close":239.44,"volume":5018396,"datetime":1501563600000},{"open":239.06,"high":241.56,"low":237.88,"close":237.95,"volume":5119876,"datetime":1501650000000},{"open":237.06,"high":239.59,"low":236.04,"close":238.25,"volume":5112697,"datetime":1501736400000},{"open":238.58,"high":239.73,"low":236.38,"close":237.71,"volume":5590535,"datetime":1501822800000},{"open":237.6,"high":241.43,"low":237.21,"close":240.23,"volume":3674677,"datetime":1502082000000},{"open":239.91,"high":240.52,"low":238.93,"close":239.5,"volume":4871451,"datetime":1502168400000},{"open":238.01,"high":238.7,"low":234.1,"close":234.31,"volume":5680369,"datetime":1502254800000},{"open":234.03,"high":236.16,"low":231.91,"close":232.88,"volume":6817655,"datetime":1502341200000},{"open":232.76,"high":235.4,"low":230.94,"close":234.88,"volume":3461663,"datetime":1502427600000},{"open":236.01,"high":237.48,"low":235.72,"close":237.15,"volume":2953549,"datetime":1502686800000},{"open":237.21,"high":239.64,"low":236.01,"close":239.17,"volume":2851082,"datetime":1502773200000},{"open":239.7,"high":240.26,"low":237.41,"close":237.59,"volume":3012660,"datetime":1502859600000},{"open":237.38,"high":237.6,"low":235.25,"close":235.59,"volume":2810933,"datetime":1502946000000},{"open":235.0,"high":237.26,"low":234.5664,"close":235.77,"volume":2939494,"datetime":1503032400000},{"open":235.77,"high":236.94,"low":234.35,"close":235.68,"volume":2545355,"datetime":1503291600000},{"open":236.16,"high":239.89,"low":236.11,"close":239.75,"volume":2915687,"datetime":1503378000000},{"open":239.36,"high":239.36,"low":237.19,"close":238.09,"volume":2518274,"datetime":1503464400000},{"open":238.52,"high":238.9,"low":236.6,"close":238.74,"volume":2553084,"datetime":1503550800000},{"open":239.0,"high":239.09,"low":235.6,"close":235.89,"volume":2270276,"datetime":1503637200000},{"open":236.22,"high":237.5547,"low":234.611,"close":237.18,"volume":2394983,"datetime":1503896400000},{"open":237.21,"high":241.17,"low":236.08,"close":240.49,"volume":3535465,"datetime":1503982800000},{"open":240.99,"high":241.44,"low":239.0,"close":240.46,"volume":2801097,"datetime":1504069200000},{"open":241.0,"high":241.1,"low":238.41,"close":239.66,"volume":3075798,"datetime":1504155600000},{"open":239.66,"high":242.53,"low":239.17,"close":240.33,"volume":3271270,"datetime":1504242000000},{"open":240.3,"high":240.36,"low":236.23,"close":237.0,"volume":3869251,"datetime":1504587600000},{"open":237.53,"high":237.8564,"low":234.34,"close":234.62,"volume":4252704,"datetime":1504674000000},{"open":234.75,"high":236.54,"low":234.29,"close":236.31,"volume":2994514,"datetime":1504760400000},{"open":235.75,"high":239.39,"low":235.21,"close":238.78,"volume":3404151,"datetime":1504846800000},{"open":239.5,"high":241.85,"low":239.31,"close":240.59,"volume":3628146,"datetime":1505106000000},{"open":240.59,"high":241.7074,"low":238.95,"close":240.58,"volume":2702732,"datetime":1505192400000},{"open":240.0,"high":243.48,"low":237.09,"close":241.93,"volume":4529090,"datetime":1505278800000},{"open":243.0,"high":245.61,"low":242.5,"close":245.23,"volume":4995155,"datetime":1505365200000},{"open":247.36,"high":249.95,"low":246.21,"close":249.0,"volume":9033301,"datetime":1505451600000},{"open":249.97,"high":253.7875,"low":248.91,"close":253.08,"volume":5192959,"datetime":1505710800000},{"open":253.08,"high":255.17,"low":251.631,"close":252.46,"volume":4124716,"datetime":1505797200000},{"open":253.26,"high":256.6924,"low":252.25,"close":255.46,"volume":3853153,"datetime":1505883600000},{"open":256.13,"high":256.99,"low":254.4239,"close":256.04,"volume":2809374,"datetime":1505970000000},{"open":256.31,"high":259.3,"low":256.13,"close":256.45,"volume":3475566,"datetime":1506056400000},{"open":256.97,"high":256.97,"low":251.5,"close":254.32,"volume":3479166,"datetime":1506315600000},{"open":254.6,"high":256.48,"low":253.54,"close":253.7,"volume":2173606,"datetime":1506402000000},{"open":255.27,"high":258.77,"low":253.971,"close":255.28,"volume":3840114,"datetime":1506488400000},{"open":254.11,"high":255.8,"low":251.17,"close":254.27,"volume":2586076,"datetime":1506574800000},{"open":253.85,"high":255.26,"low":252.591,"close":254.21,"volume":2531131,"datetime":1506661200000},{"open":254.65,"high":255.99,"low":253.5301,"close":255.99,"volume":2685053,"datetime":1506920400000},{"open":255.99,"high":258.26,"low":254.69,"close":255.46,"volume":3163415,"datetime":1507006800000},{"open":256.12,"high":257.13,"low":254.07,"close":255.76,"volume":3030983,"datetime":1507093200000},{"open":255.28,"high":258.99,"low":254.78,"close":258.89,"volume":3940198,"datetime":1507179600000},{"open":258.0,"high":258.9018,"low":257.06,"close":258.58,"volume":2736358,"datetime":1507266000000},{"open":259.0,"high":259.0,"low":257.11,"close":258.39,"volume":2146782,"datetime":1507525200000},{"open":259.74,"high":261.06,"low":257.2,"close":260.93,"volume":2740651,"datetime":1507611600000},{"open":261.32,"high":261.65,"low":259.02,"close":261.44,"volume":2890344,"datetime":1507698000000},{"open":260.95,"high":262.98,"low":260.0,"close":261.91,"volume":2577900,"datetime":1507784400000},{"open":262.9,"high":263.79,"low":260.74,"close":260.74,"volume":2243903,"datetime":1507870800000},{"open":261.5,"high":262.0,"low":259.69,"close":259.75,"volume":1818869,"datetime":1508130000000},{"open":256.49,"high":259.05,"low":256.26,"close":258.62,"volume":2515865,"datetime":1508216400000},{"open":258.47,"high":260.73,"low":256.66,"close":260.04,"volume":2051651,"datetime":1508302800000},{"open":258.98,"high":259.1,"low":256.03,"close":259.04,"volume":2589203,"datetime":1508389200000},{"open":260.36,"high":264.8272,"low":259.44,"close":264.75,"volume":3955922,"datetime":1508475600000},{"open":265.13,"high":265.98,"low":262.14,"close":262.32,"volume":3302395,"datetime":1508734800000},{"open":263.24,"high":267.21,"low":263.24,"close":266.0,"volume":4401597,"datetime":1508821200000},{"open":264.78,"high":266.0,"low":254.5,"close":258.42,"volume":7895318,"datetime":1508907600000},{"open":259.72,"high":261.44,"low":257.31,"close":259.27,"volume":3419137,"datetime":1508994000000},{"open":258.26,"high":259.4994,"low":255.8,"close":256.46,"volume":2899168,"datetime":1509080400000},{"open":255.45,"high":260.41,"low":255.33,"close":259.25,"volume":3025919,"datetime":1509339600000},{"open":259.34,"high":259.93,"low":257.47,"close":257.98,"volume":2742775,"datetime":1509426000000}],"symbol":"BA","empty":false}'
+    headers:
+      Access-Control-Allow-Headers:
+      - origin, x-requested-with, accept, authorization, content-type
+      Access-Control-Allow-Methods:
+      - GET, PUT, POST, DELETE, OPTIONS, HEAD, PATCH
+      Access-Control-Allow-Origin:
+      - ''
+      Access-Control-Max-Age:
+      - '3628800'
+      Cache-Control:
+      - no-cache,no-store,must-revalidate
+      Connection:
+      - keep-alive
+      Content-Encoding:
+      - gzip
+      Content-Security-Policy:
+      - frame-ancestors 'self'
+      Content-Type:
+      - application/json
+      Date:
+      - Fri, 02 Jul 2021 18:02:04 GMT
+      Strict-Transport-Security:
+      - max-age=31536000; includeSubDomains
+      - max-age=31536000
+      Transfer-Encoding:
+      - chunked
+      X-Content-Type-Options:
+      - nosniff
+      X-Frame-Options:
+      - SAMEORIGIN
+      X-Xss-Protection:
+      - 1; mode=block
+      vary:
+      - accept-encoding
+    http_version: HTTP/1.1
+    status_code: 200
 version: 1

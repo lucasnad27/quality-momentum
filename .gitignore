@@ -2,4 +2,6 @@ __pycache__/
 .env
 .python-version
 *.pyc
-notebooks/.ipynb_checkpoints/
+*.ipynb_checkpoints/
+.coverage
+td_token.json

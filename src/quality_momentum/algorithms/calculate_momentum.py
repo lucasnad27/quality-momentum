@@ -4,8 +4,9 @@ from typing import List, Tuple
 
 import arrow
 import pandas as pd
-import pandas_datareader as pdr
 import numpy as np
+
+import quality_momentum as qm
 
 
 @dataclasses.dataclass
@@ -37,7 +38,7 @@ def calculate_lookback_window(now: arrow.arrow.Arrow, lookback_months: int) -> L
     return LookbackPeriod(start_period, end_period)
 
 
-def calculate_fips_number(ticker: pd.DataFrame, cumulative_return: float):
+def calculate_fips_number(ticker: pd.DataFrame, cumulative_return: float) -> float:
     """
     Calculates Frog-In-The-Pan metric.
 
@@ -55,19 +56,15 @@ def calculate_fips_number(ticker: pd.DataFrame, cumulative_return: float):
     return sgn_pret * (percent_negative_return - percent_positive_return)
 
 
-def get_monthly_momentum(ticker: str, now: arrow.arrow.Arrow = None, num_lookback_months=12) -> QualityMomentumMetric:
+def get_monthly_momentum(
+    client: qm.equities.client.TdClient, ticker: str, now: arrow.arrow.Arrow = None, num_lookback_months=12
+) -> QualityMomentumMetric:
     """Calculates quality momentum metric for a given stock."""
     if not now:
         now = arrow.utcnow()
     lookback_period = calculate_lookback_window(now, lookback_months=12)
-    df = (
-        pdr.quandl.QuandlReader(
-            ticker, lookback_period.start.format("YYYY-MM-DD"), lookback_period.end.format("YYYY-MM-DD")
-        )
-        .read()
-        .sort_index()
-    )
-    df["daily_returns"] = df["AdjClose"].pct_change()
+    df = qm.equities.historical.get_daily_price_history(client, ticker, lookback_period.start, lookback_period.end)
+    df["daily_returns"] = df["Close"].pct_change()
     # calculate gross returns by month
     monthly_returns = df["daily_returns"].resample("M").apply(lambda x: ((x + 1).cumprod()).last("D"))
     cumulative_return = np.prod(monthly_returns) - 1
@@ -76,7 +73,9 @@ def get_monthly_momentum(ticker: str, now: arrow.arrow.Arrow = None, num_lookbac
     return QualityMomentumMetric(ticker=ticker, momentum=cumulative_return, fip=fip)
 
 
-def get_quality_momentum_stocks(trading_day: arrow.arrow.Arrow, num_equities: int) -> List[str]:
+def get_quality_momentum_stocks(
+    client: qm.equities.client.TdClient, trading_day: arrow.arrow.Arrow, num_equities: int
+) -> List[str]:
     """
     Calculates quality momentum and returns a list of top quality momentum stocks.
 
@@ -87,7 +86,7 @@ def get_quality_momentum_stocks(trading_day: arrow.arrow.Arrow, num_equities: in
     assert trading_day <= arrow.utcnow(), "Unable to get momentum stocks for future dates"
 
     equities = get_universe_of_equities(trading_day)
-    momentum_measures = [get_monthly_momentum(e, trading_day) for e in equities]
+    momentum_measures = [get_monthly_momentum(client, e, trading_day) for e in equities]
     df = pd.DataFrame.from_records([dataclasses.asdict(x) for x in momentum_measures], index="ticker")
     # df["quantile_rank"] = pd.qcut(df["momentum"], 10, labels=False)
     # top_decile_momentum_equities = df[df["quantile_rank"] == 9]

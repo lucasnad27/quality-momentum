@@ -16,7 +16,7 @@ test: build
 	docker run qualitymomentum:primary pytest ./tests
 
 pip_compile:
-	pip-compile ./setup/requirements.in && pip-compile ./setup/testing-requirements.in && pip-compile ./setup/local-requirements.in
+	pip-compile ./setup/requirements.in
 
 pip_sync:
-	pip-sync setup/requirements.txt setup/local-requirements.txt setup/testing-requirements.txt
+	pip-sync setup/requirements.txt

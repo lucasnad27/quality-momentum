@@ -1,8 +1,0 @@
--c testing-requirements.txt
-
-black
-debugpy
-jupyterlab
-ipython
-python-dotenv
-mypy
