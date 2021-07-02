@@ -1,7 +1,7 @@
 FROM python:3.8.10-slim as base
 
 RUN apt update
-RUN apt install build-essential -y
+RUN apt install git build-essential -y
 
 WORKDIR /quality-momentum
 

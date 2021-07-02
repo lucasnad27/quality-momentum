@@ -57,7 +57,7 @@ def get_price(client: tda.client.synchronous.Client, ticker: str, date: arrow.ar
     """Gets the closing price for an equity on the given date."""
     global PRICE_CACHE
 
-    floored_date = date.replace(hour=0, minute=0, second=0, microsecond=0)
+    floored_date = date.floor("day")
     trading_day_index = date.format("YYYY-MM-DD")
 
     cache_check = PRICE_CACHE.empty or trading_day_index not in PRICE_CACHE.index

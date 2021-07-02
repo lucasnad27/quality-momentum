@@ -4,7 +4,7 @@ ipdb
 matplotlib
 numpy
 pandas
-pyfolio
+git+https://git@github.com/quantopian/pyfolio.git@master#egg=pyfolio
 tda-api
 black
 debugpy

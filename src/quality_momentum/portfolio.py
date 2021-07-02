@@ -40,10 +40,14 @@ def eligible_for_rebalance(trading_day: Arrow) -> bool:
     """Decides if a given trading day should trigger a rebalance and returns a boolean."""
     is_eligible = False
     eligible_months = [2, 5, 8, 11]
-    # consider using trading-calendars lib to identify if we are in the last trading day of the month
-    # for now, we are doing something dumb with arrow and it won't work if this is a weekend or trading holiday
-    last_day_of_month = trading_day.date() == trading_day.ceil("month").date()
-    if trading_day.month in eligible_months and last_day_of_month:
+    nyse = tc.get_calendar("NYSE")
+
+    def _is_last_trading_day_in_month(_trading_day):
+        last_date_in_month = pd.Timestamp(_trading_day.ceil("month").datetime)
+
+        return nyse.previous_close(last_date_in_month).date() == _trading_day.date()
+
+    if trading_day.month in eligible_months and _is_last_trading_day_in_month(trading_day):
         is_eligible = True
 
     return is_eligible
@@ -54,17 +58,22 @@ def get_adjusted_close(client: qm.equities.client.TdClient, ticker: str, trading
     return qm.equities.historical.get_price(client, ticker, trading_day)
 
 
-def update_positions(client: qm.equities.client.TdClient, transactions: pd.DataFrame, trading_day) -> pd.DataFrame:
+def update_positions(
+    client: qm.equities.client.TdClient, transactions: pd.DataFrame, trading_day: Arrow, cash: float
+) -> pd.DataFrame:
     """Calculates positions based on new transactions and returns a dataframe with the current positions sizes."""
     df = transactions.groupby(["symbol"])["amount"].sum().to_frame()
-    df["date"] = trading_day.datetime
-
+    df["date"] = pd.to_datetime(trading_day.naive)
     # move the ticker from index to the symbol column
     df = df.reset_index().set_index("date").query("amount>0")
+    df.index = df.index.tz_localize("UTC")
     df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
     df["value"] = df["price"] * df["amount"]
-
-    return df.pivot_table(index="date", columns="symbol", values="value")
+    cash_df = pd.DataFrame(
+        {"symbol": "cash", "value": cash}, index=[pd.to_datetime(trading_day.naive).tz_localize("UTC")]
+    )
+    df = df.append(cash_df)
+    return df.pivot_table(index=df.index, columns="symbol", values="value")
 
 
 def calculate_returns(positions: pd.DataFrame) -> pd.Series:
@@ -95,14 +104,15 @@ def purchase_new_shares(
         # https://www.quandl.com/databases/SF1/data
         raise NotImplementedError("Need to grab trading_day market cap to determine size of position")
 
-    data = [(x, math.floor(available_cash / len(tickers))) for x in tickers]
+    data = [(x, float(math.floor(available_cash / len(tickers)))) for x in tickers]
     df = pd.DataFrame(data, columns=["symbol", "position_size"])
     df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
-    df["amount"] = (df["position_size"] / df["price"]).apply(np.floor)
+    df["amount"] = (df["position_size"] / df["price"]).apply(np.floor).astype(int)
     df["txn_dollars"] = df["price"] * df["amount"]
-    df["date"] = pd.to_datetime(trading_day.date())
+    df["date"] = pd.to_datetime(arrow.get(trading_day.date()).datetime)
     df.set_index("date", inplace=True)
     del df["position_size"]
+
     return df
 
 
@@ -132,6 +142,7 @@ class Portfolio:
         assert isinstance(num_holdings, int)
 
         self.capital_allocation = capital_allocation
+        self.available_cash = capital_allocation
         self.start_date = start_date
         self.end_date = end_date
         self.weighting = weighting
@@ -187,19 +198,29 @@ class Portfolio:
         self._transactions = purchase_new_shares(
             self.td_client, day_0, self.capital_allocation, self.num_holdings, self.weighting
         )
+        # updates available cash
+        self.available_cash = self.capital_allocation - self._transactions.loc[day_0.datetime]["txn_dollars"].sum()
         # initialize positions based on first day's transactions
-        updated_positions = update_positions(self.td_client, self._transactions, day_0)
+        updated_positions = update_positions(self.td_client, self._transactions, day_0, self.available_cash)
         # assign rows to the `day_0` self._positions index
         self._positions = self._positions.append(updated_positions)
         nyse = tc.get_calendar("NYSE")
         with alive_bar(len(nyse.sessions_in_range(self.start_date.datetime, self.end_date.datetime))) as bar:
             for trading_day in trading_days_through_period(day_1, self.end_date):
-                updated_positions = update_positions(self.td_client, self._transactions, trading_day)
-                self._positions = self._positions.append(updated_positions)
                 if eligible_for_rebalance(trading_day):
-                    # kill the backtest until remainder of data layer functionality and rebalancing is complete
-                    pass
-                bar()
+                    # implement liquidation
+                    self._transactions = self._transactions.append(
+                        purchase_new_shares(
+                            self.td_client, trading_day, self.available_cash, self.num_holdings, self.weighting
+                        )
+                    )
+                    self.available_cash = (
+                        self.capital_allocation - self._transactions.loc[trading_day.datetime]["txn_dollars"].sum()
+                    )
 
-        # calculate returns based on positions df, after iterating through trading days
+                updated_positions = update_positions(
+                    self.td_client, self._transactions, trading_day, self.available_cash
+                )
+                self._positions = self._positions.append(updated_positions)
+                bar()
         self._returns = calculate_returns(self._positions)
