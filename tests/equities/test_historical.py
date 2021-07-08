@@ -29,6 +29,8 @@ def test_get_price(td_client):
         (arrow.get("2021-07-02"), True),
         (arrow.get("1998-05-23"), False),
         (arrow.get("1998-05-22"), True),
+        (arrow.get("2021-01-29"), True),
+        (arrow.get("2021-01-31"), False),
     ],
 )
 def test_valid_trading_days(trading_day, expected_value):
