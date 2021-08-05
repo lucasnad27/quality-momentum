@@ -21,12 +21,6 @@ class WeightType(Enum):
     value_weighted = "value_weighted"
 
 
-def liquidate_positions(positions: pd.DataFrame) -> pd.DataFrame:
-    """Liquidate all open positions."""
-    if not positions.empty:
-        return
-
-
 def trading_days_through_period(start_date: Arrow, end_date: Arrow) -> Generator[Arrow, None, None]:
     """Generates all trading days in a given time period and returns an arrow date."""
     current_time = start_date
@@ -65,7 +59,7 @@ def update_positions(
     df = transactions.groupby(["symbol"])["amount"].sum().to_frame()
     df["date"] = pd.to_datetime(trading_day.naive)
     # move the ticker from index to the symbol column
-    df = df.reset_index().set_index("date").query("amount>0")
+    df = df.reset_index().set_index("date").query("amount!=0")
     df.index = df.index.tz_localize("UTC")
     df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
     df["value"] = df["price"] * df["amount"]
@@ -85,6 +79,28 @@ def calculate_returns(positions: pd.DataFrame) -> pd.Series:
     return positions.sum(axis=1).pct_change().fillna(0)
 
 
+def liquidate_shares(
+    client: qm.equities.client.TdClient, trading_day: Arrow, transactions: pd.DataFrame
+) -> pd.DataFrame:
+    """Sells all current positions in portfolio, based on current positions"""
+    if transactions.empty:
+        return
+    # use ONLY the transactions dataframe to identify what stocks to liquidate
+    # all_positions = transactions.groupby('symbol').amount.sum()
+    # df = all_positions[all_positions >= 0].to_frame()
+    stock_positions = transactions.groupby("symbol").amount.sum()
+    # filter out the rows with amount = 0
+    df = stock_positions[stock_positions >= 0].to_frame()
+    df["symbol"] = df.index
+    df["amount"] = df["amount"] * -1
+    df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
+    df["txn_dollars"] = df["price"] * df["amount"] * -1
+    df["date"] = pd.to_datetime(arrow.get(trading_day.date()).datetime)
+    df.set_index("date", inplace=True)
+
+    return df
+
+
 def purchase_new_shares(
     client: qm.equities.client.TdClient,
     trading_day: Arrow,
@@ -100,15 +116,13 @@ def purchase_new_shares(
     """
     tickers = qm.algorithms.calculate_momentum.get_quality_momentum_stocks(client, trading_day, num_holdings)
     if weight_type == WeightType.value_weighted:
-        # Consider Sharadar data from quandl to pull in market cap data
-        # https://www.quandl.com/databases/SF1/data
         raise NotImplementedError("Need to grab trading_day market cap to determine size of position")
 
     data = [(x, float(math.floor(available_cash / len(tickers)))) for x in tickers]
     df = pd.DataFrame(data, columns=["symbol", "position_size"])
     df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
     df["amount"] = (df["position_size"] / df["price"]).apply(np.floor).astype(int)
-    df["txn_dollars"] = df["price"] * df["amount"]
+    df["txn_dollars"] = df["price"] * df["amount"] * -1
     df["date"] = pd.to_datetime(arrow.get(trading_day.date()).datetime)
     df.set_index("date", inplace=True)
     del df["position_size"]
@@ -150,7 +164,6 @@ class Portfolio:
         self._transactions = pd.DataFrame()
         self._returns = pd.Series()
         self._positions = pd.DataFrame()
-        self._shares = None
         self.td_client = qm.equities.client.TdClient()
 
     @property
@@ -198,8 +211,9 @@ class Portfolio:
         self._transactions = purchase_new_shares(
             self.td_client, day_0, self.capital_allocation, self.num_holdings, self.weighting
         )
-        # updates available cash
-        self.available_cash = self.capital_allocation - self._transactions.loc[day_0.datetime]["txn_dollars"].sum()
+        # updates available cash, this looks odd because the txn_dollars amount is negative if we have purchased a stock
+        # it's positive when we've sold a stock
+        self.available_cash = self.capital_allocation + self._transactions.loc[day_0.datetime]["txn_dollars"].sum()
         # initialize positions based on first day's transactions
         updated_positions = update_positions(self.td_client, self._transactions, day_0, self.available_cash)
         # assign rows to the `day_0` self._positions index
@@ -208,14 +222,23 @@ class Portfolio:
         with alive_bar(len(nyse.sessions_in_range(self.start_date.datetime, self.end_date.datetime))) as bar:
             for trading_day in trading_days_through_period(day_1, self.end_date):
                 if eligible_for_rebalance(trading_day):
-                    # implement liquidation
+                    self._transactions = self._transactions.append(
+                        liquidate_shares(self.td_client, trading_day, self._transactions)
+                    )
+                    # filters out any purchased shares from this day
+                    self.available_cash = (
+                        self.available_cash
+                        + self._transactions.loc[trading_day.datetime].query("txn_dollars>0")["txn_dollars"].sum()
+                    )
                     self._transactions = self._transactions.append(
                         purchase_new_shares(
                             self.td_client, trading_day, self.available_cash, self.num_holdings, self.weighting
                         )
                     )
+                    # filters out any sold shares from this day
                     self.available_cash = (
-                        self.capital_allocation - self._transactions.loc[trading_day.datetime]["txn_dollars"].sum()
+                        self.available_cash
+                        + self._transactions.loc[trading_day.datetime].query("txn_dollars<0")["txn_dollars"].sum()
                     )
 
                 updated_positions = update_positions(
