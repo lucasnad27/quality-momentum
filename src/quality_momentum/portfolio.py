@@ -4,9 +4,9 @@ import math
 from enum import Enum
 
 import arrow
+import exchange_calendars as ec
 import numpy as np
 import pandas as pd
-import trading_calendars as tc
 from alive_progress import alive_bar
 from arrow.arrow import Arrow
 from typing import Generator
@@ -34,7 +34,7 @@ def eligible_for_rebalance(trading_day: Arrow) -> bool:
     """Decides if a given trading day should trigger a rebalance and returns a boolean."""
     is_eligible = False
     eligible_months = [2, 5, 8, 11]
-    nyse = tc.get_calendar("NYSE")
+    nyse = ec.get_calendar("NYSE")
 
     def _is_last_trading_day_in_month(_trading_day):
         last_date_in_month = pd.Timestamp(_trading_day.ceil("month").datetime)
@@ -218,7 +218,7 @@ class Portfolio:
         updated_positions = update_positions(self.td_client, self._transactions, day_0, self.available_cash)
         # assign rows to the `day_0` self._positions index
         self._positions = self._positions.append(updated_positions)
-        nyse = tc.get_calendar("NYSE")
+        nyse = ec.get_calendar("NYSE")
         with alive_bar(len(nyse.sessions_in_range(self.start_date.datetime, self.end_date.datetime))) as bar:
             for trading_day in trading_days_through_period(day_1, self.end_date):
                 if eligible_for_rebalance(trading_day):

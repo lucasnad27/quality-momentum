@@ -1,8 +1,8 @@
 """Provides historical daily price data."""
 import arrow
+import exchange_calendars as ec
 import pandas as pd
 import tda
-import trading_calendars as tc
 
 
 PRICE_CACHE = pd.DataFrame()
@@ -12,8 +12,8 @@ def is_valid_trading_day(trading_day: arrow.arrow.Arrow) -> bool:
     """Decides if a given trading day is valid and returns a boolean."""
     trading_day_formatted = trading_day.format("YYYY-MM-DD")
     is_valid = False
-    nyse = tc.get_calendar("NYSE")
-    nasdaq = tc.get_calendar("NASDAQ")
+    nyse = ec.get_calendar("NYSE")
+    nasdaq = ec.get_calendar("NASDAQ")
     if nyse.is_session(trading_day_formatted) and nasdaq.is_session(trading_day_formatted):
         is_valid = True
     return is_valid

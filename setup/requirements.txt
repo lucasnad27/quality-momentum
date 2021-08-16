@@ -70,6 +70,8 @@ empyrical==0.5.5
     # via pyfolio
 entrypoints==0.3
     # via nbconvert
+exchange-calendars==3.2
+    # via -r ./setup/requirements.in
 flake8==3.9.2
     # via
     #   flake8-docstrings
@@ -153,6 +155,8 @@ jupyterlab-server==2.6.0
     # via jupyterlab
 kiwisolver==1.3.1
     # via matplotlib
+korean-lunar-calendar==0.2.1
+    # via exchange-calendars
 lxml==4.6.3
     # via pandas-datareader
 markupsafe==2.0.1
@@ -198,13 +202,13 @@ numpy==1.19.5
     # via
     #   -r ./setup/requirements.in
     #   empyrical
+    #   exchange-calendars
     #   matplotlib
     #   pandas
     #   pyfolio
     #   scikit-learn
     #   scipy
     #   seaborn
-    #   trading-calendars
 packaging==20.9
     # via
     #   bleach
@@ -216,10 +220,10 @@ pandas==1.1.5
     #   -r ./setup/requirements.in
     #   dovpanda
     #   empyrical
+    #   exchange-calendars
     #   pandas-datareader
     #   pyfolio
     #   seaborn
-    #   trading-calendars
 pandas-datareader==0.9.0
     # via empyrical
 pandocfilters==1.4.3
@@ -267,6 +271,8 @@ pygments==2.8.1
     #   ipython
     #   jupyterlab-pygments
     #   nbconvert
+pyluach==1.3.0
+    # via exchange-calendars
 pyparsing==2.4.7
     # via
     #   matplotlib
@@ -297,12 +303,12 @@ pytest-vcr==1.0.2
 python-dateutil==2.8.1
     # via
     #   arrow
+    #   exchange-calendars
     #   freezegun
     #   jupyter-client
     #   matplotlib
     #   pandas
     #   tda-api
-    #   trading-calendars
 python-dotenv==0.18.0
     # via
     #   -r ./setup/requirements.in
@@ -310,9 +316,9 @@ python-dotenv==0.18.0
 pytz==2021.1
     # via
     #   babel
+    #   exchange-calendars
     #   pandas
     #   pyfolio
-    #   trading-calendars
 pyyaml==5.4.1
     # via vcrpy
 pyzmq==22.1.0
@@ -354,7 +360,6 @@ six==1.15.0
     #   cycler
     #   jsonschema
     #   python-dateutil
-    #   trading-calendars
     #   vcrpy
 sniffio==1.2.0
     # via
@@ -382,7 +387,7 @@ toml==0.10.2
     #   pytest
     #   pytest-cov
 toolz==0.11.1
-    # via trading-calendars
+    # via exchange-calendars
 tornado==6.1
     # via
     #   ipykernel
@@ -391,8 +396,6 @@ tornado==6.1
     #   jupyterlab
     #   notebook
     #   terminado
-trading-calendars==2.1.1
-    # via -r ./setup/requirements.in
 traitlets==5.0.5
     # via
     #   ipykernel

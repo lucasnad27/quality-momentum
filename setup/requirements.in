@@ -21,4 +21,4 @@ pytest-mock
 pytest-vcr
 python-dotenv
 tda-api
-trading-calendars
+exchange-calendars
