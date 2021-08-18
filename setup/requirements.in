@@ -1,14 +1,18 @@
 alive-progress
 arrow
 black
+boto3
+boto3-stubs[s3]
 debugpy
 dovpanda
+exchange-calendars
 flake8-docstrings
 git+https://git@github.com/quantopian/pyfolio.git@master#egg=pyfolio
 ipdb
 ipython
 jupyterlab
 matplotlib
+moto[s3]
 mypy
 numpy
 pandas
@@ -21,4 +25,3 @@ pytest-mock
 pytest-vcr
 python-dotenv
 tda-api
-exchange-calendars

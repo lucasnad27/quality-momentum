@@ -1,4 +1,5 @@
 import arrow
+import pandas as pd
 import pytest
 
 from quality_momentum.algorithms import calculate_momentum as cm
@@ -13,43 +14,23 @@ def test_calculate_lookback_window():
     assert expected_lookback_period == lookback_period
 
 
-def test_positive_return_fips_number(ticker_with_daily_returns):
-    cumulative_return = 0.123
-    fips_number = cm.calculate_fips_number(ticker_with_daily_returns, cumulative_return)
-    expected_fips_number = -0.18534482758620696
-
-    assert fips_number == expected_fips_number
+def test_get_monthly_momentum(s3_client, s3_bucket, tickers, sample_date_1995, expected_monthly_momentum_1995):
+    df = cm.get_monthly_momentum(s3_client, s3_bucket, tickers, sample_date_1995, num_lookback_months=6)
+    pd.testing.assert_frame_equal(expected_monthly_momentum_1995, df)
 
 
-def test_negative_return_fips_number(ticker_with_daily_returns):
-    cumulative_return = -0.123
-    fips_number = cm.calculate_fips_number(ticker_with_daily_returns, cumulative_return)
-    expected_fips_number = 0.18534482758620696
-
-    assert fips_number == expected_fips_number
-
-
-@pytest.mark.vcr()
-def test_get_monthly_momentum(td_client, sample_date):
-    metric = cm.get_monthly_momentum(td_client, "BA", sample_date)
-    expected_metric = cm.QualityMomentumMetric(0.7134697130711996, fip=-0.18534482758620696, ticker="BA")
-
-    assert metric == expected_metric
-
-
-parameterized_data = [(1, ["BA"]), (3, ["BA", "AAPL", "FB"]), (5, ["BA", "AAPL", "FB", "MCD", "INTC"])]
+parameterized_data = [(1, ["NKE"]), (3, ["NKE", "JNJ", "PFE"]), (5, ["NKE", "JNJ", "PFE", "MCD", "SIRI"])]
 
 
 @pytest.mark.parametrize("num_equities,expected_stocks", parameterized_data)
-@pytest.mark.vcr()
-def test_get_quality_momentum_stocks(td_client, num_equities, expected_stocks, sample_date):
-    quality_stocks = cm.get_quality_momentum_stocks(td_client, sample_date, num_equities)
-
+def test_get_quality_momentum_stocks(s3_client, s3_bucket, num_equities, expected_stocks, sample_date_1995):
+    now = sample_date_1995.shift(years=+1).floor("year")
+    quality_stocks = cm.get_quality_momentum_stocks(s3_client, s3_bucket, now, num_equities)
     assert quality_stocks == expected_stocks
 
 
-def test_get_quality_momentum_stocks_in_future(td_client, sample_date, freezer):
-    trading_day = sample_date.shift(days=+1)
-    freezer.move_to(sample_date.datetime)
+def test_get_quality_momentum_stocks_in_future(s3_client, s3_bucket, sample_date_1995, freezer):
+    trading_day = sample_date_1995.shift(days=+1)
+    freezer.move_to(sample_date_1995.datetime)
     with pytest.raises(AssertionError):
-        quality_stocks = cm.get_quality_momentum_stocks(td_client, trading_day, 5)
+        quality_stocks = cm.get_quality_momentum_stocks(s3_client, s3_bucket, trading_day, 5)

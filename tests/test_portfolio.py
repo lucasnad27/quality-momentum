@@ -4,10 +4,6 @@ import pytest
 from quality_momentum import portfolio as pf
 
 
-def test_trading_days_through_period():
-    pass
-
-
 @pytest.mark.parametrize(
     "trading_day,expected_value",
     [
@@ -24,10 +20,3 @@ def test_trading_days_through_period():
 def test_eligible_for_rebalance(trading_day, expected_value):
     ret_value = pf.eligible_for_rebalance(trading_day)
     assert ret_value == expected_value
-
-
-@pytest.mark.vcr()
-def test_get_adjusted_close(td_client, sample_date, sample_ticker):
-    adjusted_close = pf.get_adjusted_close(td_client, sample_ticker, sample_date)
-    expected_close = 12.75
-    assert adjusted_close == expected_close

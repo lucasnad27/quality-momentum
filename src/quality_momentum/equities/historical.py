@@ -1,11 +1,12 @@
 """Provides historical daily price data."""
+import functools
+from typing import Tuple
+
 import arrow
 import exchange_calendars as ec
 import pandas as pd
-import tda
-
-
-PRICE_CACHE = pd.DataFrame()
+from alive_progress import alive_bar
+from mypy_boto3_s3.client import S3Client
 
 
 def is_valid_trading_day(trading_day: arrow.arrow.Arrow) -> bool:
@@ -19,9 +20,27 @@ def is_valid_trading_day(trading_day: arrow.arrow.Arrow) -> bool:
     return is_valid
 
 
+@functools.cache
+def get_eod_prices(s3_client: S3Client, s3_bucket: str, trading_day: arrow.arrow.Arrow) -> pd.DataFrame:
+    """Gets the EOD price for all tickers on the given trading day."""
+    trading_day_formatted = trading_day.format("YYYY/MM/DD")
+    s3_path = f"{trading_day_formatted}/prices/us.csv"
+    s3_response = s3_client.get_object(Bucket=s3_bucket, Key=s3_path)
+    df = pd.read_csv(s3_response["Body"], index_col=0)
+    df["Ticker"] = df.index
+    return df
+
+
+def get_price(s3_client: S3Client, s3_bucket: str, ticker: str, trading_day: arrow.arrow.Arrow) -> float:
+    "Returns the adjusted close for a ticker on the given day"
+    df = get_eod_prices(s3_client, s3_bucket, trading_day)
+    return df.loc[ticker]["adjusted_close"]
+
+
 def get_daily_price_history(
-    client: tda.client.synchronous.Client,
-    ticker: str,
+    s3_client: S3Client,
+    s3_bucket: str,
+    tickers: Tuple[str, ...],
     start_date: arrow.arrow.Arrow,
     end_date: arrow.arrow.Arrow = None,
 ) -> pd.DataFrame:
@@ -29,41 +48,52 @@ def get_daily_price_history(
     if not end_date:
         end_date = arrow.utcnow()
 
-    history_response = client.get_price_history(
-        ticker,
-        period_type=client.PriceHistory.PeriodType.YEAR,
-        period=client.PriceHistory.Period.TWENTY_YEARS,
-        frequency_type=client.PriceHistory.FrequencyType.DAILY,
-        frequency=client.PriceHistory.Frequency.EVERY_MINUTE,
-        end_datetime=end_date.datetime,
-        start_datetime=start_date.datetime,
+    nyse = ec.get_calendar("NYSE")
+    trading_sessions = nyse.sessions_in_range(start_date.datetime, end_date.datetime)
+    history_df = pd.DataFrame(
+        columns=[
+            "name",
+            "type",
+            "exchange_short_name",
+            "MarketCapitalization",
+            "Beta",
+            "open",
+            "high",
+            "low",
+            "close",
+            "adjusted_close",
+            "volume",
+            "ema_50d",
+            "ema_200d",
+            "hi_250d",
+            "lo_250d",
+            "avgvol_14d",
+            "avgvol_50d",
+            "Ticker",
+        ]
     )
-    history_response.raise_for_status()
-    df = pd.DataFrame(history_response.json()["candles"])
-    # apply isn't ideal here, as it is essentially iterating through all rows, but I don't know of a better alternative
-    # for the size of this dataset I think this is a reasonable hit to take on performance
-    df["Date"] = df.apply(lambda x: arrow.get(x["datetime"]).date(), axis=1)
-    df["Date"] = pd.to_datetime(df["Date"])
+    with alive_bar(len(trading_sessions)) as bar:
+        for session in trading_sessions:
+            session_date = arrow.get(session.date())
+            bar.text(f"{session_date.format('YYYY-MM-DD')}")
+            df = get_eod_prices(s3_client, s3_bucket, session_date)
+            # remove tickers from the dataframe that aren't in the list of tickers
+            df = df[df["Ticker"].isin(tickers)]
+            # convert date to a datetime and set as index
+            with pd.option_context("mode.chained_assignment", None):
+                # removing a warning, dragons ahead!
+                df["date"] = pd.to_datetime(df["date"])
+            df.set_index("date", inplace=True)
+            history_df = history_df.append(df)
+            bar()
 
-    # Using Quandl's format as inspiration for how this dataframe _should_ look like
-    # Moving from raw api response to a dataframe will be a best opportunity to transform
-    # data from numerous APIs into a canonical format, which for now is just like Quandl :)
-    new_column_names = {"open": "Open", "high": "High", "low": "Low", "close": "Close", "volume": "Volume"}
-    df = df.drop(["datetime"], axis=1).set_index("Date").rename(columns=new_column_names)
-    return df
-
-
-def get_price(client: tda.client.synchronous.Client, ticker: str, date: arrow.arrow.Arrow) -> float:
-    """Gets the closing price for an equity on the given date."""
-    global PRICE_CACHE
-
-    floored_date = date.floor("day")
-    trading_day_index = date.format("YYYY-MM-DD")
-
-    cache_check = PRICE_CACHE.empty or trading_day_index not in PRICE_CACHE.index
-    if cache_check or PRICE_CACHE.loc[[trading_day_index]].query(f"Ticker == '{ticker}'").empty:
-        # go out a year and grab the data
-        df = get_daily_price_history(client, ticker, floored_date.shift(years=-1), floored_date.shift(years=1))
-        df["Ticker"] = ticker
-        PRICE_CACHE = PRICE_CACHE.append(df)
-    return PRICE_CACHE.loc[[trading_day_index]].query(f"Ticker == '{ticker}'").at[trading_day_index, "Close"]
+    history_df.rename(columns={"Ticker": "ticker", "MarketCapitalization": "market_cap"}, inplace=True)
+    # type conversions
+    history_df["market_cap"] = history_df["market_cap"].astype("int64")
+    history_df["ema_50d"] = history_df["ema_50d"].astype("int64")
+    history_df["ema_200d"] = history_df["ema_200d"].astype("int64")
+    history_df["hi_250d"] = history_df["hi_250d"].astype("int64")
+    history_df["lo_250d"] = history_df["lo_250d"].astype("int64")
+    history_df["avgvol_14d"] = history_df["avgvol_14d"].astype("int64")
+    history_df["avgvol_50d"] = history_df["avgvol_50d"].astype("int64")
+    return history_df

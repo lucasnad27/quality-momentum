@@ -4,7 +4,7 @@ from typing import List, Tuple
 
 import arrow
 import pandas as pd
-import numpy as np
+from mypy_boto3_s3.client import S3Client
 
 import quality_momentum as qm
 
@@ -38,7 +38,21 @@ def calculate_lookback_window(now: arrow.arrow.Arrow, lookback_months: int) -> L
     return LookbackPeriod(start_period, end_period)
 
 
-def calculate_fips_number(ticker: pd.DataFrame, cumulative_return: float) -> float:
+def get_monthly_momentum(
+    s3_client: S3Client, s3_bucket: str, tickers: Tuple[str, ...], now: arrow.arrow.Arrow = None, num_lookback_months=12
+) -> pd.DataFrame:
+    """Calculates quality momentum metric for a given stock."""
+    if not now:
+        now = arrow.utcnow()
+    lookback_period = calculate_lookback_window(now, lookback_months=num_lookback_months)
+    df = qm.equities.historical.get_daily_price_history(
+        s3_client, s3_bucket, tickers, lookback_period.start, lookback_period.end
+    )
+    df["daily_returns"] = df.groupby("ticker")["adjusted_close"].pct_change()
+    # calculate gross returns by month
+    monthly_returns = df.groupby("ticker")["daily_returns"].resample("M").apply(lambda x: ((x + 1).cumprod()).last("D"))
+    mo_data = {}
+    mo_data["momentum"] = monthly_returns.groupby("ticker").prod() - 1
     """
     Calculates Frog-In-The-Pan metric.
 
@@ -49,32 +63,17 @@ def calculate_fips_number(ticker: pd.DataFrame, cumulative_return: float) -> flo
     winners indicating high volatily. As this value approaches -1, this indicates that almost every day had a positive
     return, indicating a smooth path to positive returns, aka the frog slowly boiling in water.
     """
-    num_days = len(ticker)
-    percent_positive_return = len(ticker[ticker["daily_returns"] > 0]) / num_days
-    percent_negative_return = len(ticker[ticker["daily_returns"] < 0]) / num_days
-    sgn_pret = 1 if cumulative_return > 0 else -1
-    return sgn_pret * (percent_negative_return - percent_positive_return)
-
-
-def get_monthly_momentum(
-    client: qm.equities.client.TdClient, ticker: str, now: arrow.arrow.Arrow = None, num_lookback_months=12
-) -> QualityMomentumMetric:
-    """Calculates quality momentum metric for a given stock."""
-    if not now:
-        now = arrow.utcnow()
-    lookback_period = calculate_lookback_window(now, lookback_months=12)
-    df = qm.equities.historical.get_daily_price_history(client, ticker, lookback_period.start, lookback_period.end)
-    df["daily_returns"] = df["Close"].pct_change()
-    # calculate gross returns by month
-    monthly_returns = df["daily_returns"].resample("M").apply(lambda x: ((x + 1).cumprod()).last("D"))
-    cumulative_return = np.prod(monthly_returns) - 1
-    # calculate FIP
-    fip = calculate_fips_number(df, cumulative_return)
-    return QualityMomentumMetric(ticker=ticker, momentum=cumulative_return, fip=fip)
+    # calculate percentage of trading days with positive and negative returns
+    mo_data["percent_positive_returns"] = df.groupby("ticker")["daily_returns"].apply(lambda x: len(x[x >= 0]) / len(x))
+    mo_data["percent_negative_returns"] = df.groupby("ticker")["daily_returns"].apply(lambda x: len(x[x < 0]) / len(x))
+    mo_df = pd.concat(mo_data, axis=1)
+    mo_df["sgn_pret"] = mo_df["momentum"].apply(lambda x: 1 if x > 0 else -1)
+    mo_df["fips"] = mo_df["sgn_pret"] * (mo_df["percent_negative_returns"] - mo_df["percent_positive_returns"])
+    return mo_df
 
 
 def get_quality_momentum_stocks(
-    client: qm.equities.client.TdClient, trading_day: arrow.arrow.Arrow, num_equities: int
+    s3_client: S3Client, s3_bucket: str, trading_day: arrow.arrow.Arrow, num_equities: int
 ) -> List[str]:
     """
     Calculates quality momentum and returns a list of top quality momentum stocks.
@@ -86,15 +85,15 @@ def get_quality_momentum_stocks(
     assert trading_day <= arrow.utcnow(), "Unable to get momentum stocks for future dates"
 
     equities = get_universe_of_equities(trading_day)
-    momentum_measures = [get_monthly_momentum(client, e, trading_day) for e in equities]
-    df = pd.DataFrame.from_records([dataclasses.asdict(x) for x in momentum_measures], index="ticker")
+    df = get_monthly_momentum(s3_client, s3_bucket, equities, trading_day)
     # df["quantile_rank"] = pd.qcut(df["momentum"], 10, labels=False)
     # top_decile_momentum_equities = df[df["quantile_rank"] == 9]
     top_momentum_equities = df.nlargest(num_equities * 2, "momentum")
-    top_quality_momentum = pd.qcut(top_momentum_equities["fip"], 2, labels=["high_quality", "low_quality"])
+    top_quality_momentum = pd.qcut(top_momentum_equities["fips"], 2, labels=["high_quality", "low_quality"])
     top_momentum_equities = top_momentum_equities.assign(quality_momentum=top_quality_momentum.values)
     equities_to_buy = top_momentum_equities[top_momentum_equities["quality_momentum"] == "high_quality"]
-    return equities_to_buy.index.tolist()
+    # sort equities by momentum, avoids including too many results when equities share the same FIPS number
+    return equities_to_buy.sort_values("momentum", ascending=False).head(num_equities).index.tolist()
 
 
 def get_universe_of_equities(trading_day: arrow.arrow.Arrow) -> Tuple[str, ...]:

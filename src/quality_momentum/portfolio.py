@@ -4,11 +4,13 @@ import math
 from enum import Enum
 
 import arrow
+import boto3
 import exchange_calendars as ec
 import numpy as np
 import pandas as pd
 from alive_progress import alive_bar
 from arrow.arrow import Arrow
+from mypy_boto3_s3.client import S3Client
 from typing import Generator
 
 import quality_momentum as qm
@@ -47,13 +49,13 @@ def eligible_for_rebalance(trading_day: Arrow) -> bool:
     return is_eligible
 
 
-def get_adjusted_close(client: qm.equities.client.TdClient, ticker: str, trading_day: Arrow) -> float:
+def get_adjusted_close(s3_client: S3Client, s3_bucket: str, ticker: str, trading_day: Arrow) -> float:
     """Returns the closing price for a symbol on a given day."""
-    return qm.equities.historical.get_price(client, ticker, trading_day)
+    return qm.equities.historical.get_price(s3_client, s3_bucket, ticker, trading_day)
 
 
 def update_positions(
-    client: qm.equities.client.TdClient, transactions: pd.DataFrame, trading_day: Arrow, cash: float
+    s3_client: S3Client, s3_bucket: str, transactions: pd.DataFrame, trading_day: Arrow, cash: float
 ) -> pd.DataFrame:
     """Calculates positions based on new transactions and returns a dataframe with the current positions sizes."""
     df = transactions.groupby(["symbol"])["amount"].sum().to_frame()
@@ -61,7 +63,9 @@ def update_positions(
     # move the ticker from index to the symbol column
     df = df.reset_index().set_index("date").query("amount!=0")
     df.index = df.index.tz_localize("UTC")
-    df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
+    df["price"] = df.apply(
+        lambda x: qm.equities.historical.get_price(s3_client, s3_bucket, x["symbol"], trading_day), axis=1
+    )
     df["value"] = df["price"] * df["amount"]
     cash_df = pd.DataFrame(
         {"symbol": "cash", "value": cash}, index=[pd.to_datetime(trading_day.naive).tz_localize("UTC")]
@@ -80,7 +84,7 @@ def calculate_returns(positions: pd.DataFrame) -> pd.Series:
 
 
 def liquidate_shares(
-    client: qm.equities.client.TdClient, trading_day: Arrow, transactions: pd.DataFrame
+    s3_client: S3Client, s3_bucket: str, trading_day: Arrow, transactions: pd.DataFrame
 ) -> pd.DataFrame:
     """Sells all current positions in portfolio, based on current positions"""
     if transactions.empty:
@@ -93,7 +97,9 @@ def liquidate_shares(
     df = stock_positions[stock_positions >= 0].to_frame()
     df["symbol"] = df.index
     df["amount"] = df["amount"] * -1
-    df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
+    df["price"] = df.apply(
+        lambda x: qm.equities.historical.get_price(s3_client, s3_bucket, x["symbol"], trading_day), axis=1
+    )
     df["txn_dollars"] = df["price"] * df["amount"] * -1
     df["date"] = pd.to_datetime(arrow.get(trading_day.date()).datetime)
     df.set_index("date", inplace=True)
@@ -102,7 +108,8 @@ def liquidate_shares(
 
 
 def purchase_new_shares(
-    client: qm.equities.client.TdClient,
+    s3_client: S3Client,
+    s3_bucket: str,
     trading_day: Arrow,
     available_cash: float,
     num_holdings: int,
@@ -120,7 +127,9 @@ def purchase_new_shares(
 
     data = [(x, float(math.floor(available_cash / len(tickers)))) for x in tickers]
     df = pd.DataFrame(data, columns=["symbol", "position_size"])
-    df["price"] = df.apply(lambda x: get_adjusted_close(client, x["symbol"], trading_day), axis=1)
+    df["price"] = df.apply(
+        lambda x: qm.equities.historical.get_price(s3_client, s3_bucket, x["symbol"], trading_day), axis=1
+    )
     df["amount"] = (df["position_size"] / df["price"]).apply(np.floor).astype(int)
     df["txn_dollars"] = df["price"] * df["amount"] * -1
     df["date"] = pd.to_datetime(arrow.get(trading_day.date()).datetime)
@@ -148,12 +157,14 @@ class Portfolio:
         end_date = kwargs["end_date"]
         capital_allocation = kwargs["capital_allocation"]
         weighting = kwargs["weighting"]
+        s3_bucket = kwargs["s3_bucket"]
         num_holdings = kwargs.get("num_holdings", 20)
         assert isinstance(start_date, arrow.arrow.Arrow)
         assert isinstance(end_date, arrow.arrow.Arrow)
         assert isinstance(capital_allocation, float)
         assert isinstance(weighting, WeightType)
         assert isinstance(num_holdings, int)
+        assert isinstance(s3_bucket, str)
 
         self.capital_allocation = capital_allocation
         self.available_cash = capital_allocation
@@ -164,7 +175,9 @@ class Portfolio:
         self._transactions = pd.DataFrame()
         self._returns = pd.Series()
         self._positions = pd.DataFrame()
-        self.td_client = qm.equities.client.TdClient()
+        self.td_client = qm.equities.client.TdClient()  # currently unused
+        self.s3_client = boto3.client("s3")
+        self.s3_bucket = s3_bucket
 
     @property
     def transactions(self):
@@ -209,13 +222,15 @@ class Portfolio:
 
         # purchase shares, regardless of eligibility for rebalance
         self._transactions = purchase_new_shares(
-            self.td_client, day_0, self.capital_allocation, self.num_holdings, self.weighting
+            self.s3_client, self.s3_bucket, day_0, self.capital_allocation, self.num_holdings, self.weighting
         )
         # updates available cash, this looks odd because the txn_dollars amount is negative if we have purchased a stock
         # it's positive when we've sold a stock
         self.available_cash = self.capital_allocation + self._transactions.loc[day_0.datetime]["txn_dollars"].sum()
         # initialize positions based on first day's transactions
-        updated_positions = update_positions(self.td_client, self._transactions, day_0, self.available_cash)
+        updated_positions = update_positions(
+            self.s3_client, self.s3_bucket, self._transactions, day_0, self.available_cash
+        )
         # assign rows to the `day_0` self._positions index
         self._positions = self._positions.append(updated_positions)
         nyse = ec.get_calendar("NYSE")
@@ -223,7 +238,7 @@ class Portfolio:
             for trading_day in trading_days_through_period(day_1, self.end_date):
                 if eligible_for_rebalance(trading_day):
                     self._transactions = self._transactions.append(
-                        liquidate_shares(self.td_client, trading_day, self._transactions)
+                        liquidate_shares(self.s3_client, self.s3_bucket, trading_day, self._transactions)
                     )
                     # filters out any purchased shares from this day
                     self.available_cash = (
@@ -232,7 +247,12 @@ class Portfolio:
                     )
                     self._transactions = self._transactions.append(
                         purchase_new_shares(
-                            self.td_client, trading_day, self.available_cash, self.num_holdings, self.weighting
+                            self.s3_client,
+                            self.s3_bucket,
+                            trading_day,
+                            self.available_cash,
+                            self.num_holdings,
+                            self.weighting,
                         )
                     )
                     # filters out any sold shares from this day
@@ -242,7 +262,7 @@ class Portfolio:
                     )
 
                 updated_positions = update_positions(
-                    self.td_client, self._transactions, trading_day, self.available_cash
+                    self.s3_bucket, self.s3_bucket, self._transactions, trading_day, self.available_cash
                 )
                 self._positions = self._positions.append(updated_positions)
                 bar()
