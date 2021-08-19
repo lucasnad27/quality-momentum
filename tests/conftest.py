@@ -115,7 +115,7 @@ def expected_monthly_momentum_1995():
 
 
 @pytest.fixture(scope="module")
-def tickers():
+def sample_tickers():
     return ["AAPL", "MSFT"]
 
 
@@ -143,3 +143,35 @@ def _load_eod_data(s3_client, s3_bucket):
                         Body=f.read(),
                         ContentType="text/csv",
                     )
+
+
+@pytest.fixture(scope="module")
+def ticker_universe():
+    return [
+        "AAPL",
+        "INTC",
+        "TSLA",
+        "MSFT",
+        "NFLX",
+        "FB",
+        "AMZN",
+        "SIRI",
+        "GM",
+        "F",
+        "HD",
+        "DIS",
+        "BA",
+        "PFE",
+        "NKE",
+        "JNJ",
+        "MCD",
+    ]
+
+
+@pytest.fixture()
+def mock_equity_universe(mocker, ticker_universe):
+    """Returns a fixed list of tickers"""
+    with mocker.patch(
+        "quality_momentum.algorithms.calculate_momentum.get_universe_of_equities", return_value=ticker_universe
+    ):
+        yield

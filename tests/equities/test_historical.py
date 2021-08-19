@@ -5,11 +5,11 @@ import pytest
 from quality_momentum.equities import client, historical
 
 
-def test_get_daily_price_history(s3_client, s3_bucket, tickers, expected_aapl_msft_price_history):
+def test_get_daily_price_history(s3_client, s3_bucket, sample_tickers, expected_aapl_msft_price_history):
     start_date = arrow.get("1995-01-01")
     end_date = arrow.get("1995-02-01")
     history = historical.get_daily_price_history(
-        s3_client, s3_bucket, tickers, start_date=start_date, end_date=end_date
+        s3_client, s3_bucket, sample_tickers, start_date=start_date, end_date=end_date
     )
 
     pd.testing.assert_frame_equal(expected_aapl_msft_price_history, history)

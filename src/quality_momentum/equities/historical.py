@@ -1,6 +1,6 @@
 """Provides historical daily price data."""
 import functools
-from typing import Tuple
+from typing import List
 
 import arrow
 import exchange_calendars as ec
@@ -40,7 +40,7 @@ def get_price(s3_client: S3Client, s3_bucket: str, ticker: str, trading_day: arr
 def get_daily_price_history(
     s3_client: S3Client,
     s3_bucket: str,
-    tickers: Tuple[str, ...],
+    tickers: List[str],
     start_date: arrow.arrow.Arrow,
     end_date: arrow.arrow.Arrow = None,
 ) -> pd.DataFrame:

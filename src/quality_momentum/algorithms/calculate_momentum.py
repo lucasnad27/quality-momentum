@@ -1,6 +1,6 @@
 """Functionality to calculate high-quality momentum stocks."""
 import dataclasses
-from typing import List, Tuple
+from typing import List
 
 import arrow
 import pandas as pd
@@ -39,7 +39,7 @@ def calculate_lookback_window(now: arrow.arrow.Arrow, lookback_months: int) -> L
 
 
 def get_monthly_momentum(
-    s3_client: S3Client, s3_bucket: str, tickers: Tuple[str, ...], now: arrow.arrow.Arrow = None, num_lookback_months=12
+    s3_client: S3Client, s3_bucket: str, tickers: List[str], now: arrow.arrow.Arrow = None, num_lookback_months=12
 ) -> pd.DataFrame:
     """Calculates quality momentum metric for a given stock."""
     if not now:
@@ -84,7 +84,7 @@ def get_quality_momentum_stocks(
     """
     assert trading_day <= arrow.utcnow(), "Unable to get momentum stocks for future dates"
 
-    equities = get_universe_of_equities(trading_day)
+    equities = get_universe_of_equities(s3_client, s3_bucket, trading_day, 40)
     df = get_monthly_momentum(s3_client, s3_bucket, equities, trading_day)
     # df["quantile_rank"] = pd.qcut(df["momentum"], 10, labels=False)
     # top_decile_momentum_equities = df[df["quantile_rank"] == 9]
@@ -96,24 +96,10 @@ def get_quality_momentum_stocks(
     return equities_to_buy.sort_values("momentum", ascending=False).head(num_equities).index.tolist()
 
 
-def get_universe_of_equities(trading_day: arrow.arrow.Arrow) -> Tuple[str, ...]:
-    """Stub for now until we incorporate w/ available APIs."""
-    return (
-        "AAPL",
-        "INTC",
-        "TSLA",
-        "MSFT",
-        "NFLX",
-        "FB",
-        "AMZN",
-        "SIRI",
-        "GM",
-        "F",
-        "HD",
-        "DIS",
-        "BA",
-        "PFE",
-        "NKE",
-        "JNJ",
-        "MCD",
-    )
+def get_universe_of_equities(
+    s3_client: S3Client, s3_bucket: str, trading_day: arrow.arrow.Arrow, percentile: int
+) -> List[str]:
+    """Return equities based on the top percentile market cap"""
+    df = qm.equities.historical.get_eod_prices(s3_client, s3_bucket, trading_day)
+    # return top percentile based on market cap
+    return df.nlargest(int(len(df) * percentile / 100), "MarketCapitalization").index.tolist()

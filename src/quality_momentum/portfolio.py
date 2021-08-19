@@ -121,7 +121,9 @@ def purchase_new_shares(
     Index: DatetimeIndex
     Columns: Index(['amount', 'price', 'symbol', 'txn_dollars'], dtype='object')
     """
-    tickers = qm.algorithms.calculate_momentum.get_quality_momentum_stocks(client, trading_day, num_holdings)
+    tickers = qm.algorithms.calculate_momentum.get_quality_momentum_stocks(
+        s3_client, s3_bucket, trading_day, num_holdings
+    )
     if weight_type == WeightType.value_weighted:
         raise NotImplementedError("Need to grab trading_day market cap to determine size of position")
 
