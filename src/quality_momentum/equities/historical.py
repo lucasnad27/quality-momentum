@@ -55,7 +55,6 @@ def get_daily_price_history(
             "name",
             "type",
             "exchange_short_name",
-            "MarketCapitalization",
             "Beta",
             "open",
             "high",
@@ -70,6 +69,8 @@ def get_daily_price_history(
             "avgvol_14d",
             "avgvol_50d",
             "Ticker",
+            "outstanding_shares",
+            "market_cap",
         ]
     )
     with alive_bar(len(trading_sessions)) as bar:

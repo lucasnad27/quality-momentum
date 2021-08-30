@@ -102,4 +102,4 @@ def get_universe_of_equities(
     """Return equities based on the top percentile market cap"""
     df = qm.equities.historical.get_eod_prices(s3_client, s3_bucket, trading_day)
     # return top percentile based on market cap
-    return df.nlargest(int(len(df) * percentile / 100), "MarketCapitalization").index.tolist()
+    return df.nlargest(int(len(df) * percentile / 100), "market_cap").index.tolist()
