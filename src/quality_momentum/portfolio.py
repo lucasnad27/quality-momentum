@@ -86,7 +86,7 @@ def calculate_returns(positions: pd.DataFrame) -> pd.Series:
 def liquidate_shares(
     s3_client: S3Client, s3_bucket: str, trading_day: Arrow, transactions: pd.DataFrame
 ) -> pd.DataFrame:
-    """Sells all current positions in portfolio, based on current positions"""
+    """Sells all current positions in portfolio, based on current positions."""
     if transactions.empty:
         return
     # use ONLY the transactions dataframe to identify what stocks to liquidate

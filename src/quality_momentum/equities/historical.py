@@ -1,12 +1,16 @@
 """Provides historical daily price data."""
-import functools
 from typing import List, Optional
 
 import arrow
 import exchange_calendars as ec
 import pandas as pd
 from alive_progress import alive_bar
+from diskcache import Cache
 from mypy_boto3_s3.client import S3Client
+
+
+# file cache is instantiated with a temporary directory
+_cache = Cache()
 
 
 def is_valid_trading_day(trading_day: arrow.arrow.Arrow) -> bool:
@@ -20,19 +24,24 @@ def is_valid_trading_day(trading_day: arrow.arrow.Arrow) -> bool:
     return is_valid
 
 
-@functools.cache
 def get_eod_prices(s3_client: S3Client, s3_bucket: str, trading_day: arrow.arrow.Arrow) -> pd.DataFrame:
     """Gets the EOD price for all tickers on the given trading day."""
-    trading_day_formatted = trading_day.format("YYYY/MM/DD")
-    s3_path = f"{trading_day_formatted}/prices/us.csv"
-    s3_response = s3_client.get_object(Bucket=s3_bucket, Key=s3_path)
-    df = pd.read_csv(s3_response["Body"], index_col=0)
-    df["Ticker"] = df.index
-    return df
+
+    @_cache.memoize()
+    def get_price(trading_day):
+        # unable to cache public function due to non-serializable s3_client
+        trading_day_formatted = trading_day.format("YYYY/MM/DD")
+        s3_path = f"{trading_day_formatted}/prices/us.csv"
+        s3_response = s3_client.get_object(Bucket=s3_bucket, Key=s3_path)
+        df = pd.read_csv(s3_response["Body"], index_col=0)
+        df["Ticker"] = df.index
+        return df
+
+    return get_price(trading_day)
 
 
 def get_price(s3_client: S3Client, s3_bucket: str, ticker: str, trading_day: arrow.arrow.Arrow) -> Optional[float]:
-    "Returns the adjusted close for a ticker on the given day"
+    """Returns the adjusted close for a ticker on the given day."""
     df = get_eod_prices(s3_client, s3_bucket, trading_day)
     price = None
     try:
@@ -96,7 +105,7 @@ def get_daily_price_history(
 
     history_df.rename(columns={"Ticker": "ticker", "MarketCapitalization": "market_cap"}, inplace=True)
     # type conversions
-    history_df["market_cap"] = history_df["market_cap"].astype("int64")
+    history_df["market_cap"] = history_df["market_cap"].astype(pd.Int64Dtype())
     history_df["ema_50d"] = history_df["ema_50d"].astype("int64")
     history_df["ema_200d"] = history_df["ema_200d"].astype("int64")
     history_df["hi_250d"] = history_df["hi_250d"].astype("int64")

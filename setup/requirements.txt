@@ -79,6 +79,8 @@ decorator==5.0.7
     #   ipython
 defusedxml==0.7.1
     # via nbconvert
+diskcache==5.2.1
+    # via -r ./setup/requirements.in
 dovpanda==0.0.5
     # via -r ./setup/requirements.in
 empyrical==0.5.5
@@ -205,7 +207,9 @@ multidict==5.1.0
 mypy==0.910
     # via -r ./setup/requirements.in
 mypy-boto3-s3==1.18.23
-    # via boto3-stubs
+    # via
+    #   -r ./setup/requirements.in
+    #   boto3-stubs
 mypy-extensions==0.4.3
     # via
     #   black

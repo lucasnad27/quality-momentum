@@ -19,18 +19,6 @@ def test_get_monthly_momentum(s3_client, s3_bucket, sample_tickers, sample_date_
     pd.testing.assert_frame_equal(expected_monthly_momentum_1995, df)
 
 
-parameterized_data = [(1, ["NKE"]), (3, ["NKE", "JNJ", "PFE"]), (5, ["NKE", "JNJ", "PFE", "MCD", "SIRI"])]
-
-
-@pytest.mark.parametrize("num_equities,expected_stocks", parameterized_data)
-def test_get_quality_momentum_stocks(
-    s3_client, s3_bucket, num_equities, expected_stocks, mock_equity_universe, sample_date_1995
-):
-    now = sample_date_1995.shift(years=+1).floor("year")
-    quality_stocks = cm.get_quality_momentum_stocks(s3_client, s3_bucket, now, num_equities)
-    assert expected_stocks == quality_stocks
-
-
 def test_get_quality_momentum_stocks_in_future(s3_client, s3_bucket, sample_date_1995, freezer):
     trading_day = sample_date_1995.shift(days=+1)
     freezer.move_to(sample_date_1995.datetime)

@@ -4,6 +4,7 @@ black
 boto3
 boto3-stubs[s3]
 debugpy
+diskcache
 dovpanda
 exchange-calendars
 flake8-docstrings
