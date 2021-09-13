@@ -14,6 +14,7 @@ jupyterlab
 matplotlib
 moto[s3]
 mypy
+mypy-boto3-s3
 numpy
 pandas
 pytest

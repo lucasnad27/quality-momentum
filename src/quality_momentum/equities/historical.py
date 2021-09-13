@@ -1,6 +1,6 @@
 """Provides historical daily price data."""
 import functools
-from typing import List
+from typing import List, Optional
 
 import arrow
 import exchange_calendars as ec
@@ -31,10 +31,16 @@ def get_eod_prices(s3_client: S3Client, s3_bucket: str, trading_day: arrow.arrow
     return df
 
 
-def get_price(s3_client: S3Client, s3_bucket: str, ticker: str, trading_day: arrow.arrow.Arrow) -> float:
+def get_price(s3_client: S3Client, s3_bucket: str, ticker: str, trading_day: arrow.arrow.Arrow) -> Optional[float]:
     "Returns the adjusted close for a ticker on the given day"
     df = get_eod_prices(s3_client, s3_bucket, trading_day)
-    return df.loc[ticker]["adjusted_close"]
+    price = None
+    try:
+        price = df.loc[ticker]["adjusted_close"]
+    except KeyError:
+        # data issue, return None 🤷🏼‍♂️
+        pass
+    return price
 
 
 def get_daily_price_history(

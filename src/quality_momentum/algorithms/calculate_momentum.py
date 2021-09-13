@@ -52,7 +52,8 @@ def get_monthly_momentum(
     # calculate gross returns by month
     monthly_returns = df.groupby("ticker")["daily_returns"].resample("M").apply(lambda x: ((x + 1).cumprod()).last("D"))
     mo_data = {}
-    mo_data["momentum"] = monthly_returns.groupby("ticker").prod() - 1
+    # use to_numeric to ensure that we have a column of type float
+    mo_data["momentum"] = pd.to_numeric(monthly_returns.groupby("ticker").prod() - 1)
     """
     Calculates Frog-In-The-Pan metric.
 
@@ -85,6 +86,7 @@ def get_quality_momentum_stocks(
     assert trading_day <= arrow.utcnow(), "Unable to get momentum stocks for future dates"
 
     equities = get_universe_of_equities(s3_client, s3_bucket, trading_day, 40)
+    assert len(equities) > 30, f"Unable to get enough equities to get quality momentum: {len(equities)} found"
     df = get_monthly_momentum(s3_client, s3_bucket, equities, trading_day)
     # df["quantile_rank"] = pd.qcut(df["momentum"], 10, labels=False)
     # top_decile_momentum_equities = df[df["quantile_rank"] == 9]

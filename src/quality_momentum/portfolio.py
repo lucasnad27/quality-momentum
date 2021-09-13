@@ -264,7 +264,7 @@ class Portfolio:
                     )
 
                 updated_positions = update_positions(
-                    self.s3_bucket, self.s3_bucket, self._transactions, trading_day, self.available_cash
+                    self.s3_client, self.s3_bucket, self._transactions, trading_day, self.available_cash
                 )
                 self._positions = self._positions.append(updated_positions)
                 bar()
