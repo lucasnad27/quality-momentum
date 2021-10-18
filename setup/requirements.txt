@@ -416,6 +416,8 @@ snowballstemmer==2.1.0
     # via pydocstyle
 tda-api==1.3.4
     # via -r ./setup/requirements.in
+tenacity==8.0.1
+    # via -r ./setup/requirements.in
 terminado==0.10.1
     # via
     #   jupyter-server

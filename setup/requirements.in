@@ -27,3 +27,4 @@ pytest-mock
 pytest-vcr
 python-dotenv
 tda-api
+tenacity

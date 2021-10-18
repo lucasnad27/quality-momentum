@@ -14,6 +14,9 @@ Explore the Makefile for all availabe build actions. Most commands are simple wr
 make run
 # Navigate to http://127.0.0.1:8888
 
+# Pre-cache data from AWS S3 to improve backtesting performance
+make cache S3_BUCKET=prod-stock-universe DATA_DIR=s3_data/
+
 # Kill jupyter server
 make stop
 
@@ -91,3 +94,14 @@ From here you can run the `Python: Remotee Attach" debugger and hit breakpoints 
 	]
 }
 ```
+
+## Initial results from 30-year backtest
+
+|Strategy                     |Compound Annual Growth Rate (CAGR)|Sharpe Ratio|
+|-----------------------------------------------------------------------------|
+|QM-15th Percentile Market Cap|15.521%                           |0.60        |
+|QM-30th Percentile Market Cap|19.577%                           |0.69        |
+|QM-40th Percentile Market Cap|19.519%                           |0.69        |
+|QM-60th Percentile Market Cap|19.577%                           |0.69        |
+|QM-90th Percentile Market Cap|19.577%                           |0.69        |
+|S&P 500                      |9.92%                             |0.41        |

@@ -1,10 +1,11 @@
 setup:
 	export DOCKER_BUILDKIT=1
 
-run:
-
 run: setup
 	docker-compose up -d --build jupyter
+
+cache:
+	aws s3 sync s3://$(S3_BUCKET)/ ./$(DATA_DIR)
 
 stop:
 	docker-compose stop jupyter

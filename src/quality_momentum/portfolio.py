@@ -8,7 +8,6 @@ import boto3
 import exchange_calendars as ec
 import numpy as np
 import pandas as pd
-from alive_progress import alive_bar
 from arrow.arrow import Arrow
 from mypy_boto3_s3.client import S3Client
 from typing import Generator
@@ -71,6 +70,8 @@ def update_positions(
         {"symbol": "cash", "value": cash}, index=[pd.to_datetime(trading_day.naive).tz_localize("UTC")]
     )
     df = df.append(cash_df)
+    # convert value column to float
+    df["value"] = df["value"].astype(float)
     return df.pivot_table(index=df.index, columns="symbol", values="value")
 
 
@@ -94,7 +95,7 @@ def liquidate_shares(
     # df = all_positions[all_positions >= 0].to_frame()
     stock_positions = transactions.groupby("symbol").amount.sum()
     # filter out the rows with amount = 0
-    df = stock_positions[stock_positions >= 0].to_frame()
+    df = stock_positions[stock_positions > 0].to_frame()
     df["symbol"] = df.index
     df["amount"] = df["amount"] * -1
     df["price"] = df.apply(
@@ -114,6 +115,7 @@ def purchase_new_shares(
     available_cash: float,
     num_holdings: int,
     weight_type: WeightType,
+    market_cap_percentile: int,
 ) -> pd.DataFrame:
     """
     Purchases shares of quality momentum stocks.
@@ -122,7 +124,7 @@ def purchase_new_shares(
     Columns: Index(['amount', 'price', 'symbol', 'txn_dollars'], dtype='object')
     """
     tickers = qm.algorithms.calculate_momentum.get_quality_momentum_stocks(
-        s3_client, s3_bucket, trading_day, num_holdings
+        s3_client, s3_bucket, trading_day, num_holdings, market_cap_percentile
     )
     if weight_type == WeightType.value_weighted:
         raise NotImplementedError("Need to grab trading_day market cap to determine size of position")
@@ -154,6 +156,7 @@ class Portfolio:
         capital_allocation --> float
         weighting --> WeightType
         num_holdings --> integer
+        market_cap_percentile --> integer
         """
         start_date = kwargs["start_date"]
         end_date = kwargs["end_date"]
@@ -161,12 +164,14 @@ class Portfolio:
         weighting = kwargs["weighting"]
         s3_bucket = kwargs["s3_bucket"]
         num_holdings = kwargs.get("num_holdings", 20)
+        market_cap_percentile = kwargs.get("market_cap_percentile", 40)
         assert isinstance(start_date, arrow.arrow.Arrow)
         assert isinstance(end_date, arrow.arrow.Arrow)
         assert isinstance(capital_allocation, float)
         assert isinstance(weighting, WeightType)
         assert isinstance(num_holdings, int)
         assert isinstance(s3_bucket, str)
+        assert isinstance(market_cap_percentile, int)
 
         self.capital_allocation = capital_allocation
         self.available_cash = capital_allocation
@@ -174,6 +179,7 @@ class Portfolio:
         self.end_date = end_date
         self.weighting = weighting
         self.num_holdings = num_holdings
+        self.market_cap_percentile = market_cap_percentile
         self._transactions = pd.DataFrame()
         self._returns = pd.Series()
         self._positions = pd.DataFrame()
@@ -214,7 +220,7 @@ class Portfolio:
         Rebalance quarterly, before quarter ending months: end of February, May, August, and November.
         """
         day_0 = self.start_date
-        # ensure that day_0 is a valid trading days, bump day forward until this is true
+        # ensure that day_0 is a valid trading day, bump day forward until this is true
         while True:
             if qm.equities.historical.is_valid_trading_day(day_0):
                 # day_0 is a valid trading day
@@ -223,8 +229,15 @@ class Portfolio:
         day_1 = day_0.shift(days=+1)
 
         # purchase shares, regardless of eligibility for rebalance
+        print(f"Purchasing initial shares. {day_0=}")
         self._transactions = purchase_new_shares(
-            self.s3_client, self.s3_bucket, day_0, self.capital_allocation, self.num_holdings, self.weighting
+            self.s3_client,
+            self.s3_bucket,
+            day_0,
+            self.capital_allocation,
+            self.num_holdings,
+            self.weighting,
+            self.market_cap_percentile,
         )
         # updates available cash, this looks odd because the txn_dollars amount is negative if we have purchased a stock
         # it's positive when we've sold a stock
@@ -236,36 +249,37 @@ class Portfolio:
         # assign rows to the `day_0` self._positions index
         self._positions = self._positions.append(updated_positions)
         nyse = ec.get_calendar("NYSE")
-        with alive_bar(len(nyse.sessions_in_range(self.start_date.datetime, self.end_date.datetime))) as bar:
-            for trading_day in trading_days_through_period(day_1, self.end_date):
-                if eligible_for_rebalance(trading_day):
-                    self._transactions = self._transactions.append(
-                        liquidate_shares(self.s3_client, self.s3_bucket, trading_day, self._transactions)
-                    )
-                    # filters out any purchased shares from this day
-                    self.available_cash = (
-                        self.available_cash
-                        + self._transactions.loc[trading_day.datetime].query("txn_dollars>0")["txn_dollars"].sum()
-                    )
-                    self._transactions = self._transactions.append(
-                        purchase_new_shares(
-                            self.s3_client,
-                            self.s3_bucket,
-                            trading_day,
-                            self.available_cash,
-                            self.num_holdings,
-                            self.weighting,
-                        )
-                    )
-                    # filters out any sold shares from this day
-                    self.available_cash = (
-                        self.available_cash
-                        + self._transactions.loc[trading_day.datetime].query("txn_dollars<0")["txn_dollars"].sum()
-                    )
-
-                updated_positions = update_positions(
-                    self.s3_client, self.s3_bucket, self._transactions, trading_day, self.available_cash
+        for trading_day in trading_days_through_period(day_1, self.end_date):
+            if eligible_for_rebalance(trading_day):
+                print(f"Rebalancing portfolio...{trading_day.format('YYYY-MM-DD')}")
+                self._transactions = self._transactions.append(
+                    liquidate_shares(self.s3_client, self.s3_bucket, trading_day, self._transactions)
                 )
-                self._positions = self._positions.append(updated_positions)
-                bar()
+                # filters out any purchased shares from this day
+                self.available_cash = (
+                    self.available_cash
+                    + self._transactions.loc[trading_day.datetime].query("txn_dollars>0")["txn_dollars"].sum()
+                )
+                self._transactions = self._transactions.append(
+                    purchase_new_shares(
+                        self.s3_client,
+                        self.s3_bucket,
+                        trading_day,
+                        self.available_cash,
+                        self.num_holdings,
+                        self.weighting,
+                        self.market_cap_percentile,
+                    )
+                )
+                # filters out any sold shares from this day
+                self.available_cash = (
+                    self.available_cash
+                    + self._transactions.loc[trading_day.datetime].query("txn_dollars<0")["txn_dollars"].sum()
+                )
+
+            updated_positions = update_positions(
+                self.s3_client, self.s3_bucket, self._transactions, trading_day, self.available_cash
+            )
+            self._positions = self._positions.append(updated_positions)
+        print("Calculating returns")
         self._returns = calculate_returns(self._positions)

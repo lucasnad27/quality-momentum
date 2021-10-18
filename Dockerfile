@@ -3,7 +3,7 @@ FROM python:3.9.6-slim as base
 RUN apt update
 RUN apt install git build-essential -y
 
-WORKDIR /quality-momentum
+WORKDIR /app
 
 # Dependency setup
 RUN pip install --upgrade pip
@@ -13,7 +13,7 @@ COPY ./setup/*.txt ./
 RUN --mount=type=cache,target=/root/.cache/pip \
     pip-sync requirements.txt --pip-args '--no-cache-dir --no-deps'
 
-COPY . /quality-momentum
+COPY . /app
 
 FROM base as debugger
 

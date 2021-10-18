@@ -74,7 +74,7 @@ def get_monthly_momentum(
 
 
 def get_quality_momentum_stocks(
-    s3_client: S3Client, s3_bucket: str, trading_day: arrow.arrow.Arrow, num_equities: int
+    s3_client: S3Client, s3_bucket: str, trading_day: arrow.arrow.Arrow, num_equities: int, market_cap_percentile: int
 ) -> List[str]:
     """
     Calculates quality momentum and returns a list of top quality momentum stocks.
@@ -85,7 +85,7 @@ def get_quality_momentum_stocks(
     """
     assert trading_day <= arrow.utcnow(), "Unable to get momentum stocks for future dates"
 
-    equities = get_universe_of_equities(s3_client, s3_bucket, trading_day, 40)
+    equities = get_universe_of_equities(s3_client, s3_bucket, trading_day, market_cap_percentile)
     assert len(equities) > 30, f"Unable to get enough equities to get quality momentum: {len(equities)} found"
     df = get_monthly_momentum(s3_client, s3_bucket, equities, trading_day)
     # df["quantile_rank"] = pd.qcut(df["momentum"], 10, labels=False)
@@ -102,6 +102,15 @@ def get_universe_of_equities(
     s3_client: S3Client, s3_bucket: str, trading_day: arrow.arrow.Arrow, percentile: int
 ) -> List[str]:
     """Return equities based on the top percentile market cap."""
+    deny_list = ["VTIQW", "KSI", "ITQ", "RCRT", "ZIXI", "GURE", "RCAT"]
     df = qm.equities.historical.get_eod_prices(s3_client, s3_bucket, trading_day)
+    # remove any equities with a price of NaN
+    df = df[df["adjusted_close"].notna()]
+    # remove any equities with an adjusted_close less than 1
+    df = df[df["adjusted_close"] > 1]
+    # remove equities with a ticker in the deny list
+    df = df[~df["Ticker"].isin(deny_list)]
+    # remove equities with _old in the ticker
+    df = df[~df["Ticker"].str.contains("_old")]
     # return top percentile based on market cap
     return df.nlargest(int(len(df) * percentile / 100), "market_cap").index.tolist()

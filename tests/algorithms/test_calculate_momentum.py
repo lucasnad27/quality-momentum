@@ -23,7 +23,7 @@ def test_get_quality_momentum_stocks_in_future(s3_client, s3_bucket, sample_date
     trading_day = sample_date_1995.shift(days=+1)
     freezer.move_to(sample_date_1995.datetime)
     with pytest.raises(AssertionError):
-        quality_stocks = cm.get_quality_momentum_stocks(s3_client, s3_bucket, trading_day, 5)
+        quality_stocks = cm.get_quality_momentum_stocks(s3_client, s3_bucket, trading_day, 5, 40)
 
 
 def test_get_universe_of_equities(s3_client, s3_bucket, sample_date_1995, mock_equity_universe, ticker_universe):
